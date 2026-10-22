@@ -63,6 +63,8 @@ export function disconnectDevice() {
 export function sendPacket(packet) {
   if (!bleState.writeChar) return Promise.reject(new Error('Dora not connected'));
   const bytes = Uint8Array.from(packet);
+  if (bytes.length !== 15 || bytes[0] !== 0xAA || bytes[14] !== 0xA5)
+    return Promise.reject(new Error('Refusing non-Dora BLE packet'));
   // Do not silently swallow write failures; queued writes must stay usable.
   const next = writeLock.catch(() => {}).then(async () => {
     if (!bleState.writeChar) throw new Error('Dora disconnected');
