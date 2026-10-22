@@ -1,8 +1,9 @@
 // Device selection and shared adapter API. Nova remains the default and
 // only registered device until Dora Web Bluetooth support is validated.
 import * as nova from '../robots/nova/adapter.js';
+import * as dora from '../robots/dora/adapter.js';
 
-const adapters = new Map([['nova', nova]]);
+const adapters = new Map([['nova', nova], ['dora', dora]]);
 let activeId = 'nova';
 let eventHandler = null;
 
@@ -27,3 +28,4 @@ export function selectRobot(id) {
 }
 export function onRobotEvent(handler) { eventHandler = handler; }
 nova.setEventHandler(event => { if (activeId === 'nova') eventHandler?.(event); });
+dora.setEventHandler(event => { if (activeId === 'dora') eventHandler?.(event); });
