@@ -47,11 +47,13 @@ import {
 } from './runner.js';
 
 import { downloadDrill } from './cloud.js';
+import { initDoraPanel } from './dora-panel.js';
 
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
     initData();
+    initDoraPanel();
     renderDrillButtons();
     updateStatsUI();
     setupEventListeners();
