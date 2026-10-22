@@ -5,7 +5,8 @@ import * as dora from '../robots/dora/adapter.js';
 
 const adapters = new Map([['nova', nova], ['dora', dora]]);
 let activeId = 'nova';
-let eventHandler = null;
+const eventHandlers = new Set();
+function emit(event) { for (const handler of eventHandlers) handler(event); }
 
 export function registerAdapter(id, adapter) {
     if (!id || adapters.has(id)) throw new Error('Duplicate or missing robot ID');
@@ -14,7 +15,7 @@ export function registerAdapter(id, adapter) {
     }
     if (!adapter.bleState) throw new TypeError('Adapter missing bleState');
     adapters.set(id, adapter);
-    adapter.setEventHandler(event => { if (activeId === id) eventHandler?.(event); });
+    adapter.setEventHandler(event => { if (activeId === id) emit(event); });
 }
 export function getActiveRobotId() { return activeId; }
 export function getRobotIds() { return [...adapters.keys()]; }
@@ -26,6 +27,6 @@ export function selectRobot(id) {
     activeId = id;
     document.dispatchEvent(new CustomEvent('connection-changed'));
 }
-export function onRobotEvent(handler) { eventHandler = handler; }
-nova.setEventHandler(event => { if (activeId === 'nova') eventHandler?.(event); });
-dora.setEventHandler(event => { if (activeId === 'dora') eventHandler?.(event); });
+export function onRobotEvent(handler) { eventHandlers.add(handler); return () => eventHandlers.delete(handler); }
+nova.setEventHandler(event => { if (activeId === 'nova') emit(event); });
+dora.setEventHandler(event => { if (activeId === 'dora') emit(event); });
