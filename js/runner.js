@@ -2,6 +2,7 @@ import { currentDrills, selectedLevel, runMode, appStats, setLastPlayed } from '
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { log, showToast, clamp, toggleBodyScroll } from './utils.js';
 import { updateStatsUI, updateLastPlayedHighlight } from './ui.js';
+import { getActiveRobotId } from './core/robot-manager.js';
 
 let isRunning = false;
 let isPaused = false;
@@ -28,6 +29,10 @@ const ui = {
 };
 
 export function startDrillSequence(drillName) {
+    if (getActiveRobotId() !== 'nova') {
+        showToast('Use the Dora test panel for Dora-specific drill parameters');
+        return;
+    }
     const rawParams = currentDrills[drillName] ? currentDrills[drillName][selectedLevel] : null;
     if(!rawParams) {
          log("Drill data not found: " + drillName);
