@@ -6,6 +6,7 @@ import * as dora from './robots/dora/adapter.js';
 let stopTimer = null;
 let launched = 0;
 let busy = false;
+let cancelGeneration = 0;
 function field(id, name, min, max, val) {
   return `<label style="display:flex;flex-direction:column;gap:4px;font-size:13px">${name}
     <input id="dora-${id}" type="number" min="${min}" max="${max}" step="1" value="${val}"
@@ -20,11 +21,12 @@ function refresh() {
     el.style.display = selected ? 'none' : '';
   });
   document.getElementById('grp-difficulty').style.display = selected ? 'none' : '';
-  document.getElementById('ui-reps').parentElement.parentElement.style.display = selected ? 'none' : '';
+  document.getElementById('ui-reps').parentElement.style.display = selected ? 'none' : '';
   document.getElementById('robot-select').value = getActiveRobotId();
   document.querySelector('header h1').textContent = selected ? 'OpenPong — Dora' : 'Nova Drill Control';
 }
 async function stop() {
+  cancelGeneration++;
   clearTimeout(stopTimer); stopTimer = null;
   try {
     await dora.stopTraining();
@@ -68,6 +70,7 @@ export function initDoraPanel() {
     if (busy || dora.isRunning()) return;
     if (!dora.bleState.isConnected) { setStatus('Connect to Dora first'); return; }
     busy = true;
+    const generation = ++cancelGeneration;
     document.getElementById('dora-start').disabled = true;
     try {
       const parameters = {
@@ -79,6 +82,7 @@ export function initDoraPanel() {
       setStatus('Uploading configuration...');
       launched = 0; document.getElementById('dora-count').textContent = '0';
       await dora.prepareDrill([parameters]);
+      if (generation !== cancelGeneration) return; // Stop was pressed during upload.
       setStatus('Starting...');
       await dora.startTraining();
       stopTimer = setTimeout(stop, duration * 1000);
