@@ -7,9 +7,13 @@ onRobotEvent(event => {
     if (event.type === 'drillCompleted') handleDone();
 });
 
-// Current legacy consumers read this object directly. It is the Nova state
-// object until the UI is migrated to select adapters dynamically.
-export const bleState = getActiveAdapter().bleState;
+// Legacy callers may retain bleState while the active adapter changes.
+// Resolve state properties on demand instead of capturing the initial Nova object.
+export const bleState = new Proxy({}, {
+    get(_target, key) { return getActiveAdapter().bleState[key]; },
+    set(_target, key, value) { getActiveAdapter().bleState[key] = value; return true; },
+    has(_target, key) { return key in getActiveAdapter().bleState; }
+});
 export const connectDevice = (...args) => getActiveAdapter().connectDevice(...args);
 export const disconnectDevice = (...args) => getActiveAdapter().disconnectDevice(...args);
 export const sendPacket = (...args) => getActiveAdapter().sendPacket(...args);
