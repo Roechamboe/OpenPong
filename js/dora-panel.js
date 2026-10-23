@@ -10,6 +10,7 @@ import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
 
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
 let stopTimer=null, running=false, busy=false, token=0, launches=0;
+let holdTimer=null, holdStart=null, suppressRunClick=false;
 let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -44,13 +45,11 @@ function renderCards(){
  $('dora-tabs').innerHTML=CATEGORIES.map(c=>`<div role="tab" tabindex="0" aria-selected="${category===c}" class="tab-btn ${category===c?'active':''}" data-cat="${c}">${iconGrid} ${categoryLabel(c)}</div>`).join('');
  $('dora-levels').innerHTML=[1,2,3].map(i=>`<button class="lvl-dot ${level===i?'active':''}" data-level="${i}" type="button">${i}</button>`).join('');
  $('dora-cards').innerHTML=drills.filter(d=>d.category===category).map(d=>`
- <div style="display:flex;align-items:stretch;gap:8px;margin:7px 0">
-  <button class="btn-drill" type="button" data-run="${escapeHtml(d.id)}" style="flex:1;min-width:0">
-   <div class="drill-icon"><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div></div>
-   <span>${escapeHtml(d.name)}</span>${d.shuffle?'<div class="mark-random">R</div>':''}
-  </button>
-  <button class="btn-swap" type="button" data-edit="${escapeHtml(d.id)}" title="Edit drill" aria-label="Edit ${escapeHtml(d.name)}">✎</button>
- </div>`).join('')+
+ <button class="btn-drill" type="button" data-run="${escapeHtml(d.id)}" style="width:100%">
+  <div class="drill-icon"><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div></div>
+  <span>${escapeHtml(d.name)}</span>${d.shuffle?'<div class="mark-random">R</div>':''}
+  <div class="drill-grab-handle" data-edit="${escapeHtml(d.id)}" title="Edit drill (hold to edit; grip for drag in Nova)" aria-label="Edit ${escapeHtml(d.name)}" role="button" tabindex="0">≡</div>
+ </button>`).join('')+
  (category.startsWith('custom-')?'<div style="display:flex;justify-content:center;margin:15px 0"><button class="btn-swap" id="dora-add-drill" type="button" title="Create new drill" aria-label="Create new drill">＋</button></div>':'');
 }
 function editor(){
@@ -215,13 +214,33 @@ export function initDoraPanel(){
  $('dora-levels').onclick=e=>{const b=e.target.closest('[data-level]');if(b){level=Number(b.dataset.level);closeEditor();renderCards();}};
  $('dora-cards').onclick=e=>{
   const run=e.target.closest('[data-run]'),edit=e.target.closest('[data-edit]');
-  if(run)void startDrill(run.dataset.run);
-  if(edit)openEditor(edit.dataset.edit);
+  if(edit){e.stopPropagation();openEditor(edit.dataset.edit);return;}
+  if(run){if(suppressRunClick){suppressRunClick=false;return;}void startDrill(run.dataset.run);}
   if(e.target.closest('#dora-add-drill')){
    const name=prompt('Name of new Dora drill');if(!name?.trim())return;
    const d=newDrill(name.trim().slice(0,40),category);drills.push(d);persist();openEditor(d.id);
   }
  };
+ // Match Nova: a sustained press edits, a quick tap runs.
+ $('dora-cards').addEventListener('pointerdown',e=>{
+  if(e.target.closest('.drill-grab-handle'))return;
+  const row=e.target.closest('[data-run]');if(!row)return;
+  holdStart={id:row.dataset.run,x:e.clientX,y:e.clientY};
+  clearTimeout(holdTimer);
+  holdTimer=setTimeout(()=>{if(!holdStart)return;suppressRunClick=true;openEditor(holdStart.id);holdStart=null;},600);
+ });
+ $('dora-cards').addEventListener('pointermove',e=>{
+  if(holdStart&&(Math.abs(e.clientX-holdStart.x)>10||Math.abs(e.clientY-holdStart.y)>10)){
+   clearTimeout(holdTimer);holdStart=null;
+  }
+ });
+ for(const name of ['pointerup','pointercancel','pointerleave']){
+  $('dora-cards').addEventListener(name,()=>{clearTimeout(holdTimer);holdStart=null;});
+ }
+ $('dora-cards').addEventListener('keydown',e=>{
+  const grip=e.target.closest('.drill-grab-handle');
+  if(grip&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openEditor(grip.dataset.edit);}
+ });
  $('dora-editor').onchange=modifyEditor;
  $('dora-steps').onclick=e=>{
   const btn=e.target.closest('[data-action]');if(!btn)return;
