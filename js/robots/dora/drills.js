@@ -7,24 +7,41 @@ const ball = overrides => ({ ...DEFAULT_BALL, ...overrides });
 function drill(name, steps, category='basic') {
   return { id: name.toLowerCase().replace(/[^a-z0-9]+/g,'-'), name, category, levels: [steps,clone(steps),clone(steps)], shuffle:false };
 }
-export function defaults() {
-  const center = ball({ direction:45, speed:45, frequencyLevel:65 });
-  const left = ball({ direction:25, speed:45, frequencyLevel:65 });
-  const right = ball({ direction:65, speed:45, frequencyLevel:65 });
-  const backspin = ball({ direction:45, speed:40, spin:20, angle:180, frequencyLevel:65 });
-  const topspin = ball({ direction:45, speed:40, spin:20, angle:0, frequencyLevel:65 });
-  return [
-    drill('Center drive',[[center]]),
-    drill('Left drive',[[left]]),
-    drill('Right drive',[[right]]),
-    drill('Backspin',[[backspin]]),
-    drill('Topspin',[[topspin]]),
-    drill('Left–right',[[left],[right]],'combined'),
-    drill('Center–left–right',[[center],[left],[right]],'combined'),
-    drill('Alternating spin',[[topspin],[backspin]],'complex'),
-    drill('Wide placement',[[left],[center],[right],[center]],'complex')
-  ];
+// Derived from Nova's js/constants.js names and ordered sequences.
+// Dora speed/spin/arc values are approximate starting points, NOT RPM equivalents.
+export const FACTORY_PRESET_VERSION=2;
+const LAYOUT={
+ basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
+ combined:['loop(b)-drive(b)','loop(f)-drive(f)','drive(f)-drive(b)','push(f)-drive(f)','push(b)-loop(b)','loop(f)-drive(b)','push(f)-loop(b)','drive(f)-drive(f)','push(b)-loop(f)','push(f)-loop(f)','loop(f)-loop(f)','loop(b)-drive(f)'],
+ complex:['push(b)-loop(f)-drive(b)','push(f)-loop(b)-drive(f)','loop(f)-drive(f)-drive(b)','loop(b)-drive(f)-drive(b)','drive(f)-drive(f)-drive(f)','push(f)-loop(f)-drive(f)','push(b)-loop(b)-drive(b)','push(f)-loop(b)-drive(b)','loop(f)-drive(b)-drive(f)','loop(b)-drive(b)-drive(f)','push(b)-loop(f)-drive(f)','push(b)-loop(b)-drive(f)','drive(b)-drive(f)-drive(f)','random-drive','23-random-drive','all-random']
+};
+function shot(symbol,difficulty=1){
+ const m=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
+ if(!m)throw new Error('Unknown Nova preset token '+symbol);
+ const [,type,side]=m,level=difficulty-1;
+ return ball({
+  direction:side==='b'?30:60,
+  speed:{push:[25,30,35],drive:[40,45,50],loop:[38,43,48]}[type][level],
+  spin:{push:[18,22,26],drive:[10,13,16],loop:[23,27,31]}[type][level],
+  arc:{push:0,drive:3,loop:12}[type],
+  frequencyLevel:{push:[35,45,55],drive:[65,75,85],loop:[35,45,55]}[type][level],
+  angle:type==='push'?180:0
+ });
 }
+function segments(name){
+ if(name==='random-drive')return ['drive(f)','drive(b)'];
+ if(name==='23-random-drive')return ['drive(f)','drive(b)','drive(f)'];
+ if(name==='all-random')return ['push(f)','push(b)','drive(f)','drive(b)'];
+ return name.split('-');
+}
+export function defaults(){
+ return Object.entries(LAYOUT).flatMap(([category,names])=>names.map(name=>({
+  id:name,name,category,
+  levels:[1,2,3].map(level=>segments(name).map(segment=>[shot(segment,level)])),
+  shuffle:name.includes('random'),factory:true
+ })));
+}
+
 function validBall(b) {
   if (!b || typeof b !== 'object') return false;
   return [['direction',0,90],['speed',20,100],['spin',0,60],['arc',-65,65],
@@ -40,11 +57,22 @@ export function validateDrill(d) {
       && step.every(validBall)));
 }
 export function loadDrills() {
+  const factory=defaults();
   try {
-    const stored = JSON.parse(localStorage.getItem(KEY));
-    if (Array.isArray(stored) && stored.every(validateDrill)) return stored;
-  } catch (error) { console.warn('Invalid Dora drill storage',error); }
-  return defaults();
+    const stored=JSON.parse(localStorage.getItem(KEY));
+    if(Array.isArray(stored) && stored.every(validateDrill)) {
+      const marker='openpong_dora_factory_version';
+      if(Number(localStorage.getItem(marker))>=FACTORY_PRESET_VERSION)return stored;
+      const ids=new Set(factory.map(d=>d.id));
+      // Preserve the user's existing Dora custom drills, edits and ordering.
+      const merged=[...factory.map(d=>stored.find(old=>old.id===d.id)||d),
+        ...stored.filter(d=>!ids.has(d.id))];
+      saveDrills(merged);
+      localStorage.setItem(marker,String(FACTORY_PRESET_VERSION));
+      return merged;
+    }
+  } catch(error){console.warn('Invalid Dora drill storage',error);}
+  return factory;
 }
 export function saveDrills(drills) {
   if (!Array.isArray(drills) || !drills.every(validateDrill)) throw new Error('Invalid Dora drill configuration');
