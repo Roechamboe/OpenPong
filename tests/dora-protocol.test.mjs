@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   decodeBall, encodeBall, encodeBallRaw, encodeSequence,
-  encodeStart, encodeStop, encodeFollowUp, isLaunchNotification
+  encodeStart, encodeStop, encodeFollowUp, encodeBrightness, encodeVolume, isLaunchNotification
 } from '../js/robots/dora/protocol.js';
 const hex = value => [...value].map(x => x.toString(16).padStart(2, '0')).join(' ');
 const fromHex = value => Uint8Array.from(value.split(' ').map(x => parseInt(x, 16)));
@@ -59,4 +59,13 @@ test('start, test, stop and follow-up have correct framing', () => {
 test('physical launch notification from HCI capture', () => {
   assert.equal(isLaunchNotification(fromHex('bb 10 00 00 10 b5')), true);
   assert.equal(isLaunchNotification(fromHex('bb 10 00 00 11 b5')), false);
+});
+
+test('Dora audio volume and light brightness are exact 15-byte commands', () => {
+  assert.equal(hex(encodeVolume(0)), 'aa 83 00 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.equal(hex(encodeVolume(6)), 'aa 83 06 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.equal(hex(encodeBrightness(4)), 'aa 82 04 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.equal(hex(encodeBrightness(10)), 'aa 82 0a 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.throws(() => encodeVolume(7), RangeError);
+  assert.throws(() => encodeBrightness(3), RangeError);
 });
