@@ -176,12 +176,12 @@ export function initDoraPanel(){
  <div class="section-label" style="margin:0 0 9px">Robot settings</div>
  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
   <label class="control-pill" style="display:flex;flex-direction:column;gap:7px;min-width:0">
-   <span>Audio volume <strong id="dora-volume-value">3</strong></span>
-   <input id="dora-volume" type="range" min="0" max="6" step="1" value="3" aria-label="Dora volume" style="width:100%">
+   <span>Audio volume <strong id="dora-volume-value">5</strong></span>
+   <input id="dora-volume" type="range" min="1" max="10" step="1" value="5" aria-label="Dora volume" style="width:100%">
   </label>
   <label class="control-pill" style="display:flex;flex-direction:column;gap:7px;min-width:0">
-   <span>Light brightness <strong id="dora-brightness-value">7</strong></span>
-   <input id="dora-brightness" type="range" min="4" max="10" step="1" value="7" aria-label="Dora brightness" style="width:100%">
+   <span>Light brightness <strong id="dora-brightness-value">5</strong></span>
+   <input id="dora-brightness" type="range" min="1" max="10" step="1" value="5" aria-label="Dora brightness" style="width:100%">
   </label>
  </div>
  <p id="dora-settings-status" role="status" aria-live="polite" style="font-size:0.75rem;color:var(--text-light);margin:6px 0 0">Connect Dora to adjust settings</p>`;
@@ -189,8 +189,8 @@ export function initDoraPanel(){
  // Do not send unverified saved preferences on connection automatically:
  // sliders show a neutral starting position until explicitly adjusted.
  for(const [name,min,max,send] of [
-  ['volume',0,6,level=>robot.setVolume(level)],
-  ['brightness',4,10,level=>robot.setBrightness(level)]
+  ['volume',1,10,level=>robot.setVolume(level)],
+  ['brightness',1,10,level=>robot.setBrightness(level)]
  ]){
   const input=$('dora-'+name),value=$('dora-'+name+'-value');
   input.addEventListener('input',()=>{value.textContent=input.value;});
