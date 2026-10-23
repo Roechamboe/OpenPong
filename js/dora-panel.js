@@ -26,6 +26,7 @@ function persist(){saveDrills(drills);renderCards();}
 function refresh(){
  const dora=getActiveRobotId()==='dora';
  $('dora-panel').hidden=!dora;
+ $('dora-device-settings').hidden=!dora;
  // Remove controls injected by older Dora builds if any remain.
  for (const id of ['dora-mode','dora-duration','dora-reps']) {
   const legacy=document.getElementById(id);
@@ -165,7 +166,7 @@ export function initDoraPanel(){
  if (!document.getElementById('dora-hidden-style')) {
   const style=document.createElement('style');style.id='dora-hidden-style';
   style.textContent=`
-    #dora-panel[hidden], #dora-editor[hidden] { display:none !important; }
+    #dora-panel[hidden], #dora-editor[hidden], #dora-device-settings[hidden] { display:none !important; }
     #dora-editor, #dora-editor * { box-sizing:border-box; }
     #dora-editor .editor-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
     #dora-editor .editor-field { min-width:0; }
@@ -182,6 +183,46 @@ export function initDoraPanel(){
  }
  selector.innerHTML='ROBOT <select id="robot-select" style="margin-left:10px;padding:8px;border-radius:8px"><option value="nova">Pongbot Nova</option><option value="dora">Pusun Dora</option></select>';
  document.querySelector('.settings-card').prepend(selector);
+ // Dora-only controls live alongside shared settings, not in a duplicate drill card.
+ const deviceSettings=document.createElement('div');
+ deviceSettings.id='dora-device-settings';
+ deviceSettings.hidden=true;
+ deviceSettings.style.cssText='padding:10px 0;border-top:1px solid var(--border);margin-top:10px';
+ deviceSettings.innerHTML=`
+ <div class="section-label" style="margin:0 0 9px">Robot settings</div>
+ <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+  <label class="control-pill" style="display:flex;flex-direction:column;gap:7px;min-width:0">
+   <span>Audio volume <strong id="dora-volume-value">3</strong></span>
+   <input id="dora-volume" type="range" min="0" max="6" step="1" value="3" aria-label="Dora volume" style="width:100%">
+  </label>
+  <label class="control-pill" style="display:flex;flex-direction:column;gap:7px;min-width:0">
+   <span>Light brightness <strong id="dora-brightness-value">7</strong></span>
+   <input id="dora-brightness" type="range" min="4" max="10" step="1" value="7" aria-label="Dora brightness" style="width:100%">
+  </label>
+ </div>
+ <p id="dora-settings-status" role="status" aria-live="polite" style="font-size:0.75rem;color:var(--text-light);margin:6px 0 0">Connect Dora to adjust settings</p>`;
+ document.querySelector('.settings-card').append(deviceSettings);
+ // Do not send unverified saved preferences on connection automatically:
+ // sliders show a neutral starting position until explicitly adjusted.
+ for(const [name,min,max,send] of [
+  ['volume',0,6,level=>robot.setVolume(level)],
+  ['brightness',4,10,level=>robot.setBrightness(level)]
+ ]){
+  const input=$('dora-'+name),value=$('dora-'+name+'-value');
+  input.addEventListener('input',()=>{value.textContent=input.value;});
+  input.addEventListener('change',async()=>{
+   const level=Number(input.value);
+   if(!Number.isInteger(level)||level<min||level>max)return;
+   if(!robot.bleState.isConnected){
+    $('dora-settings-status').textContent='Connect Dora before applying settings';
+    return;
+   }
+   input.disabled=true;
+   try{await send(level);$('dora-settings-status').textContent=name+' set to '+level;}
+   catch(error){$('dora-settings-status').textContent='Could not set '+name+': '+error.message;}
+   finally{input.disabled=false;}
+  });
+ }
  const panel=document.createElement('section');panel.id='dora-panel';panel.hidden=true;
  panel.innerHTML=`
  <p id="dora-status" role="status" aria-live="polite" style="margin:8px 0;color:var(--text-light);font-size:0.8rem">Connect to Dora to start</p>
