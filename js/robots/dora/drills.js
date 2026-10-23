@@ -9,7 +9,8 @@ function drill(name, steps, category='basic') {
 }
 // Derived from Nova's js/constants.js names and ordered sequences.
 // Dora speed/spin/arc values are approximate starting points, NOT RPM equivalents.
-export const FACTORY_PRESET_VERSION=2;
+export const FACTORY_PRESET_VERSION=3;
+const LEGACY_STARTER_IDS=new Set(['center-drive','left-drive','right-drive','backspin','topspin','left-right','center-left-right','alternating-spin','wide-placement']);
 const LAYOUT={
  basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
  combined:['loop(b)-drive(b)','loop(f)-drive(f)','drive(f)-drive(b)','push(f)-drive(f)','push(b)-loop(b)','loop(f)-drive(b)','push(f)-loop(b)','drive(f)-drive(f)','push(b)-loop(f)','push(f)-loop(f)','loop(f)-loop(f)','loop(b)-drive(f)'],
@@ -64,9 +65,19 @@ export function loadDrills() {
       const marker='openpong_dora_factory_version';
       if(Number(localStorage.getItem(marker))>=FACTORY_PRESET_VERSION)return stored;
       const ids=new Set(factory.map(d=>d.id));
-      // Preserve the user's existing Dora custom drills, edits and ordering.
-      const merged=[...factory.map(d=>stored.find(old=>old.id===d.id)||d),
-        ...stored.filter(d=>!ids.has(d.id))];
+      const byId=new Map(stored.map(d=>[d.id,d]));
+      // Match the exact factory names/categories from main, but preserve
+      // edited Dora-native parameters. Previously shipped Dora starter drills
+      // remain editable under Custom A rather than appearing among factory drills.
+      const merged=[
+        ...factory.map(d=>{
+          const saved=byId.get(d.id);
+          return saved?{...saved,name:d.name,category:d.category,factory:true}:d;
+        }),
+        ...stored.filter(d=>!ids.has(d.id)).map(d=>
+          LEGACY_STARTER_IDS.has(d.id) && !d.category.startsWith('custom-')
+            ? {...d,category:'custom-a'} : d)
+      ];
       saveDrills(merged);
       localStorage.setItem(marker,String(FACTORY_PRESET_VERSION));
       return merged;
