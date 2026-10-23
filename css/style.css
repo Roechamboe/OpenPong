@@ -1081,3 +1081,8 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 #dora-settings-page[hidden] {display:none!important;}
 #dora-settings-page .settings-card {box-sizing:border-box;}
 #dora-settings-page input[type="range"] {max-width:100%;}
+
+/* Theme-aware device-settings close button, matching the modal close icon. */
+#dora-device-settings-card {position:relative;}
+.dora-settings-close {position:absolute;right:15px;top:12px;background:transparent;border:0;color:var(--text-light);font-size:1.65rem;line-height:1;padding:5px 8px;cursor:pointer;border-radius:8px;}
+.dora-settings-close:hover,.dora-settings-close:focus-visible {color:var(--primary);background:var(--primary-dim);}
