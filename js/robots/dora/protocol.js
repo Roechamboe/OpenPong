@@ -21,6 +21,7 @@ export const DORA = Object.freeze({
   BALL_FIRST: 0x24, BALL_LAST: 0x55,
   SEQUENCE: 0x6D, START_TRAINING: 0x6A,
   STOP_TRAINING: 0x6B, FOLLOW_UP: 0x66,
+  BRIGHTNESS: 0x82, VOLUME: 0x83,
   MAX_SEQUENCE_STEPS: 28, SEQUENCE_PAGES: 6
 });
 
@@ -165,6 +166,22 @@ export function encodeFollowUp({ byte8 = 0 } = {}) {
   integer(byte8, 0, 255, 'byte8');
   const b = frame(DORA.FOLLOW_UP);
   b[8] = byte8;
+  return b;
+}
+/** Confirmed in the official Android application's BLE captures.
+ * Brightness UI levels: 4–10; volume UI levels: 0–6.
+ * Both values occupy byte 2 in a 15-byte AA ... A5 packet.
+ */
+export function encodeBrightness(level) {
+  integer(level, 4, 10, 'brightness');
+  const b = frame(DORA.BRIGHTNESS);
+  b[2] = level;
+  return b;
+}
+export function encodeVolume(level) {
+  integer(level, 0, 6, 'volume');
+  const b = frame(DORA.VOLUME);
+  b[2] = level;
   return b;
 }
 /** Validated in a physical run: 15 notifications coincided with 15 launches. */
