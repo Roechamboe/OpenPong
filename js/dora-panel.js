@@ -184,6 +184,14 @@ export function initDoraPanel(){
    <input id="dora-brightness" type="range" min="0" max="15" step="1" value="5" aria-label="Dora brightness" style="width:100%">
   </label>
  </div>
+ <fieldset class="control-pill" style="margin:10px 0 0;min-width:0;border:1px solid var(--border);border-radius:10px;padding:10px">
+  <legend style="padding:0 5px;font-weight:600">Light Mode</legend>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+   <label><input type="radio" name="dora-light-mode" value="0"> As App</label>
+   <label><input type="radio" name="dora-light-mode" value="1"> As Hit</label>
+   <label><input type="radio" name="dora-light-mode" value="2"> As Wheel</label>
+  </div>
+ </fieldset>
  <p id="dora-settings-status" role="status" aria-live="polite" style="font-size:0.75rem;color:var(--text-light);margin:6px 0 0">Connect Dora to adjust settings</p>`;
  document.getElementById('dora-device-settings-card').append(deviceSettings);
  // Do not send unverified saved preferences on connection automatically:
@@ -207,6 +215,24 @@ export function initDoraPanel(){
    finally{input.disabled=false;}
   });
  }
+ // No mode is preselected: a UI default must not be mistaken for the robot's current state.
+ deviceSettings.querySelectorAll('input[name="dora-light-mode"]').forEach(input=>{
+  input.addEventListener('change',async()=>{
+   if(!input.checked)return;
+   if(!robot.bleState.isConnected){
+    $('dora-settings-status').textContent='Connect Dora before applying settings';
+    return;
+   }
+   const radios=[...deviceSettings.querySelectorAll('input[name="dora-light-mode"]')];
+   radios.forEach(radio=>radio.disabled=true);
+   try{
+    await robot.setLightMode(Number(input.value));
+    $('dora-settings-status').textContent='Light Mode set to '+input.parentElement.textContent.trim();
+   }catch(error){
+    $('dora-settings-status').textContent='Could not set Light Mode: '+error.message;
+   }finally{radios.forEach(radio=>radio.disabled=false);}
+  });
+ });
  const panel=document.createElement('section');panel.id='dora-panel';panel.hidden=true;
  panel.innerHTML=`
  <p id="dora-status" role="status" aria-live="polite" style="margin:8px 0;color:var(--text-light);font-size:0.8rem">Connect to Dora to start</p>
