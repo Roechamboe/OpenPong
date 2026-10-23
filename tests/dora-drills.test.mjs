@@ -40,5 +40,31 @@ test('factory migration preserves existing saved Dora drills and custom edits',(
  assert.equal(upgraded.length,35);
  assert.equal(upgraded.find(d=>d.id===old[0].id).levels[0][0][0].speed,72);
  assert.ok(upgraded.some(d=>d.id===custom.id));
- assert.equal(stored.get('openpong_dora_factory_version'),'2');
+ assert.equal(stored.get('openpong_dora_factory_version'),'3');
+});
+
+test('legacy Dora starter drills move to custom library without losing settings',()=>{
+ const stored=new Map();
+ globalThis.localStorage={getItem:k=>stored.get(k)||null,setItem:(k,v)=>stored.set(k,v)};
+ const original=newDrill('Center drive','basic');
+ original.id='center-drive';
+ original.levels[0][0][0].speed=71;
+ stored.set('openpong_dora_drills_v1',JSON.stringify([original]));
+ stored.set('openpong_dora_factory_version','2');
+ const migrated=loadDrills();
+ assert.equal(migrated.filter(d=>d.category==='basic').length,6);
+ const preserved=migrated.find(d=>d.id==='center-drive');
+ assert.equal(preserved.category,'custom-a');
+ assert.equal(preserved.levels[0][0][0].speed,71);
+ assert.equal(stored.get('openpong_dora_factory_version'),'3');
+});
+
+test('factory drill names match the main branch preset keys in category order',()=>{
+ const names={
+ basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
+ combined:['loop(b)-drive(b)','loop(f)-drive(f)','drive(f)-drive(b)','push(f)-drive(f)','push(b)-loop(b)','loop(f)-drive(b)','push(f)-loop(b)','drive(f)-drive(f)','push(b)-loop(f)','push(f)-loop(f)','loop(f)-loop(f)','loop(b)-drive(f)'],
+ complex:['push(b)-loop(f)-drive(b)','push(f)-loop(b)-drive(f)','loop(f)-drive(f)-drive(b)','loop(b)-drive(f)-drive(b)','drive(f)-drive(f)-drive(f)','push(f)-loop(f)-drive(f)','push(b)-loop(b)-drive(b)','push(f)-loop(b)-drive(b)','loop(f)-drive(b)-drive(f)','loop(b)-drive(b)-drive(f)','push(b)-loop(f)-drive(f)','push(b)-loop(b)-drive(f)','drive(b)-drive(f)-drive(f)','random-drive','23-random-drive','all-random']
+ };
+ for(const [cat,expected] of Object.entries(names))
+  assert.deepEqual(defaults().filter(d=>d.category===cat).map(d=>d.name),expected);
 });
