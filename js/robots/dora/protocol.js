@@ -21,7 +21,7 @@ export const DORA = Object.freeze({
   BALL_FIRST: 0x24, BALL_LAST: 0x55,
   SEQUENCE: 0x6D, START_TRAINING: 0x6A,
   STOP_TRAINING: 0x6B, FOLLOW_UP: 0x66,
-  BRIGHTNESS: 0x82, VOLUME: 0x83,
+  BRIGHTNESS: 0x82, VOLUME: 0x83, LIGHT_MODE: 0x94,
   MAX_SEQUENCE_STEPS: 28, SEQUENCE_PAGES: 6
 });
 
@@ -176,6 +176,13 @@ export function encodeBrightness(level) {
   integer(level, 0, 15, 'brightness');
   const b = frame(DORA.BRIGHTNESS);
   b[2] = level;
+  return b;
+}
+/** App labels map to mode values: As App=0, As Hit=1, As Wheel=2. */
+export function encodeLightMode(mode) {
+  integer(mode, 0, 2, 'light mode');
+  const b = frame(DORA.LIGHT_MODE);
+  b[2] = mode;
   return b;
 }
 export function encodeVolume(level) {
