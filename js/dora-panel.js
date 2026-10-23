@@ -115,7 +115,7 @@ async function stop(){
  token++;clearTimeout(stopTimer);stopTimer=null;running=false;
  $('dora-stop').disabled=true;
  if(!robot.bleState.isConnected){status('Disconnected. Verify physical stop.');return;}
- try{await robot.stopTraining();status(`Stopped · ${launches} launches`);}
+ try{await robot.stopTraining();status('Stopped');}
  catch(e){status('STOP FAILED: '+e.message);}
 }
 async function startDrill(id){
