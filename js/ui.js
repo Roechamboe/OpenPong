@@ -1,7 +1,8 @@
 // Shared, robot-independent presentation utilities.
+import {appStats} from './state.js';
 export function updateStatsUI(){
  const el=document.getElementById('stats-display');
- if(el){const {appStats}=window.__openpongState;el.textContent=`Balls: ${appStats.balls} | Drills: ${appStats.drills}`;}
+ if(el){el.textContent=`Balls: ${appStats.balls} | Drills: ${appStats.drills}`;}
 }
 export function setTheme(theme){
  if(!['standard','ocean','forest','night'].includes(theme))return;
