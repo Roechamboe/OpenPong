@@ -169,17 +169,17 @@ export function encodeFollowUp({ byte8 = 0 } = {}) {
   return b;
 }
 /** Confirmed in the official Android application's BLE captures.
- * Brightness UI levels: 4–10; volume UI levels: 0–6.
+ * Brightness and volume UI levels: 1–10.
  * Both values occupy byte 2 in a 15-byte AA ... A5 packet.
  */
 export function encodeBrightness(level) {
-  integer(level, 4, 10, 'brightness');
+  integer(level, 1, 10, 'brightness');
   const b = frame(DORA.BRIGHTNESS);
   b[2] = level;
   return b;
 }
 export function encodeVolume(level) {
-  integer(level, 0, 6, 'volume');
+  integer(level, 1, 10, 'volume');
   const b = frame(DORA.VOLUME);
   b[2] = level;
   return b;
