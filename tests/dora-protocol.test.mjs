@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   decodeBall, encodeBall, encodeBallRaw, encodeSequence,
-  encodeStart, encodeStop, encodeFollowUp, encodeBrightness, encodeVolume, isLaunchNotification
+  encodeStart, encodeStop, encodeFollowUp, encodeBrightness, encodeVolume, encodeLightMode, isLaunchNotification
 } from '../js/robots/dora/protocol.js';
 const hex = value => [...value].map(x => x.toString(16).padStart(2, '0')).join(' ');
 const fromHex = value => Uint8Array.from(value.split(' ').map(x => parseInt(x, 16)));
@@ -68,4 +68,15 @@ test('Dora audio volume and light brightness are exact 15-byte commands', () => 
   assert.equal(hex(encodeBrightness(15)), 'aa 82 0f 00 00 00 00 00 00 00 00 00 00 00 a5');
   assert.throws(() => encodeVolume(13), RangeError);
   assert.throws(() => encodeBrightness(16), RangeError);
+});
+
+
+test('Dora Light Mode packets match app radio values', () => {
+  const expected = ['00', '01', '02'];
+  expected.forEach((value, mode) => {
+    assert.equal(hex(encodeLightMode(mode)), `aa 94 ${value} 00 00 00 00 00 00 00 00 00 00 00 a5`);
+  });
+  assert.throws(() => encodeLightMode(-1), RangeError);
+  assert.throws(() => encodeLightMode(3), RangeError);
+  assert.throws(() => encodeLightMode(1.5), RangeError);
 });
