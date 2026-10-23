@@ -5,20 +5,20 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#202b34">
  <title>Dora Drill Control · OpenPong</title>
- <link rel="stylesheet" href="css/style.css?v=dora-standalone-v1">
+ <link rel="stylesheet" href="css/style.css?v=dora-standalone-v2">
 </head>
 <body>
  <div class="container">
   <header>
    <h1>Dora Drill Control</h1>
-   <button class="menu-btn" type="button" onclick="toggleMenu()" aria-label="Open settings menu">☰</button>
+   <div class="menu-btn" role="button" tabindex="0" onclick="toggleMenu()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMenu()}" aria-label="Open settings menu"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
   </header>
   <div id="theme-menu" class="theme-menu">
    <div class="menu-title">Theme</div>
-   <div class="theme-item" onclick="setTheme('standard')">Standard</div>
-   <div class="theme-item" onclick="setTheme('ocean')">Ocean</div>
-   <div class="theme-item" onclick="setTheme('forest')">Forest</div>
-   <div class="theme-item" onclick="setTheme('night')">Dark</div>
+   <div class="theme-item" onclick="setTheme('standard')"><span class="color-preview" style="background:#ff6b4a"></span> Standard</div>
+   <div class="theme-item" onclick="setTheme('ocean')"><span class="color-preview" style="background:#0984e3"></span> Ocean</div>
+   <div class="theme-item" onclick="setTheme('forest')"><span class="color-preview" style="background:#00b894"></span> Forest</div>
+   <div class="theme-item" onclick="setTheme('night')"><span class="color-preview" style="background:#2d3436"></span> Dark</div>
    <div style="border-top:1px solid var(--border);margin:8px 0"></div>
    <div class="theme-item" onclick="resetStats()">Reset Statistics</div>
   </div>
@@ -40,6 +40,6 @@
    <div id="stats-display">Balls: 0 | Drills: 0</div>
   </footer>
  </div>
- <script type="module" src="js/main.js?v=dora-standalone-v1"></script>
+ <script type="module" src="js/main.js?v=dora-standalone-v2"></script>
 </body>
 </html>
