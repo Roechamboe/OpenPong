@@ -4,6 +4,8 @@ A browser-based Web Bluetooth drill controller for the **Pusun Dora Smart Pro TT
 
 This standalone fork keeps a **modular robot adapter API** so contributors can add support for other robots later. It does not ship Nova BLE commands, RPM conversions, or Nova-specific training logic.
 
+**Launch OpenPong:** [https://roechamboe.github.io/OpenPong/](https://roechamboe.github.io/OpenPong/)
+
 ## Running
 
 - Serve this directory over HTTPS (GitHub Pages works), or locally from `localhost` with a static HTTP server.
