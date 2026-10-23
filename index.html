@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#202b34">
  <title>Dora Drill Control · OpenPong</title>
- <link rel="stylesheet" href="css/style.css?v=dora-standalone-v2">
+ <link rel="stylesheet" href="css/style.css?v=dora-standalone-v3">
 </head>
 <body>
  <div class="container">
@@ -14,6 +14,11 @@
    <div class="menu-btn" role="button" tabindex="0" onclick="toggleMenu()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMenu()}" aria-label="Open settings menu"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
   </header>
   <div id="theme-menu" class="theme-menu">
+   <div class="menu-title">Drill</div>
+   <div id="dora-export" class="theme-item" role="button" tabindex="0"><span class="color-preview" style="background:var(--text)"></span> Export Drills</div>
+   <div id="dora-import" class="theme-item" role="button" tabindex="0"><span class="color-preview" style="background:var(--text)"></span> Import Drills</div>
+   <div id="dora-open-settings" class="theme-item" role="button" tabindex="0" onclick="openDoraSettings()">⚙ Device Settings</div>
+   <div style="border-top:1px solid var(--border);margin:8px 0"></div>
    <div class="menu-title">Theme</div>
    <div class="theme-item" onclick="setTheme('standard')"><span class="color-preview" style="background:#ff6b4a"></span> Standard</div>
    <div class="theme-item" onclick="setTheme('ocean')"><span class="color-preview" style="background:#0984e3"></span> Ocean</div>
@@ -22,6 +27,13 @@
    <div style="border-top:1px solid var(--border);margin:8px 0"></div>
    <div class="theme-item" onclick="resetStats()">Reset Statistics</div>
   </div>
+  <input id="dora-import-file" type="file" accept=".json" hidden>
+  <section id="dora-settings-page" hidden role="dialog" aria-modal="true" aria-labelledby="dora-settings-title">
+   <div class="settings-card" style="width:100%;max-width:440px;margin:30px auto">
+    <button type="button" class="btn-modal" onclick="closeDoraSettings()" style="float:right">Close ×</button>
+    <h2 id="dora-settings-title">Device Settings</h2>
+   </div>
+  </section>
   <div class="settings-card">
    <div id="status-text">Disconnected</div>
    <button id="btn-connect" class="btn-connect" type="button">Connect</button>
