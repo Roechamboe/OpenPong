@@ -11,7 +11,7 @@ This tool can be used as a replacement for the original app, removing the requir
 
 **Online/Offline:**
 
-  * Visit: [https://olanga.github.io/nova/](https://olanga.github.io/nova/)
+  * Visit: [https://olanga.github.io/OpenPong/](https://olanga.github.io/OpenPong/)
   * Self hosting: https is required
 
 **Local:**
