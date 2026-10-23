@@ -63,10 +63,9 @@ test('physical launch notification from HCI capture', () => {
 
 test('Dora audio volume and light brightness are exact 15-byte commands', () => {
   assert.equal(hex(encodeVolume(0)), 'aa 83 00 00 00 00 00 00 00 00 00 00 00 00 a5');
-  assert.equal(hex(encodeVolume(10)), 'aa 83 0a 00 00 00 00 00 00 00 00 00 00 00 a5');
-  assert.equal(hex(encodeBrightness(1)), 'aa 82 01 00 00 00 00 00 00 00 00 00 00 00 a5');
-  assert.equal(hex(encodeBrightness(10)), 'aa 82 0a 00 00 00 00 00 00 00 00 00 00 00 a5');
-  assert.throws(() => encodeVolume(11), RangeError);
-  assert.throws(() => encodeBrightness(0), RangeError);
-  assert.throws(() => encodeBrightness(11), RangeError);
+  assert.equal(hex(encodeVolume(12)), 'aa 83 0c 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.equal(hex(encodeBrightness(0)), 'aa 82 00 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.equal(hex(encodeBrightness(15)), 'aa 82 0f 00 00 00 00 00 00 00 00 00 00 00 a5');
+  assert.throws(() => encodeVolume(13), RangeError);
+  assert.throws(() => encodeBrightness(16), RangeError);
 });
