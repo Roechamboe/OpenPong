@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#202b34">
  <title>Dora Drill Control · OpenPong</title>
- <link rel="stylesheet" href="css/style.css?v=dora-standalone-v4">
+ <link rel="stylesheet" href="css/style.css?v=dora-standalone-v5">
 </head>
 <body>
  <div class="container">
@@ -30,7 +30,7 @@
   <input id="dora-import-file" type="file" accept=".json" hidden>
   <section id="dora-settings-page" hidden role="dialog" aria-modal="true" aria-labelledby="dora-settings-title">
    <div id="dora-device-settings-card" class="settings-card" style="width:100%;max-width:440px;margin:30px auto">
-    <button type="button" class="btn-modal" onclick="closeDoraSettings()" style="float:right">Close ×</button>
+    <button type="button" class="dora-settings-close" onclick="closeDoraSettings()" aria-label="Close device settings" title="Close device settings">×</button>
     <h2 id="dora-settings-title">Device Settings</h2>
    </div>
   </section>
@@ -52,6 +52,6 @@
    <div id="stats-display">Balls: 0 | Drills: 0</div>
   </footer>
  </div>
- <script type="module" src="js/main.js?v=dora-standalone-v4"></script>
+ <script type="module" src="js/main.js?v=dora-standalone-v5"></script>
 </body>
 </html>
