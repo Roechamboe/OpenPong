@@ -100,6 +100,7 @@ function modifyEditor(event){
 }
 async function stop(){
  token++;clearTimeout(stopTimer);stopTimer=null;running=false;
+ $('dora-stop').disabled=true;
  if(!robot.bleState.isConnected){status('Disconnected. Verify physical stop.');return;}
  try{await robot.stopTraining();status(`Stopped · ${launches} launches`);}
  catch(e){status('STOP FAILED: '+e.message);}
@@ -134,7 +135,7 @@ async function startDrill(id){
  } catch(err) {
   status('Start error: '+err.message);
   if(robot.isRunning())await stop();
- } finally{busy=false;}
+ } finally{busy=false; if(!running)$('dora-stop').disabled=true;}
 }
 function download(text,name){
  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
@@ -234,7 +235,7 @@ export function initDoraPanel(){
    if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
-  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;status('Disconnected — verify robot has stopped');}
+  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;$('dora-stop').disabled=true;status('Disconnected — verify robot has stopped');}
  });
  renderCards();refresh();
 }
