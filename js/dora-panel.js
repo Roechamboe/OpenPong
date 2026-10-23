@@ -1,9 +1,9 @@
-// Dora drill UI mirrors the Nova workflow while using Dora-native values.
+// Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
-import { getActiveRobotId, selectRobot, onRobotEvent } from './core/robot-manager.js';
+import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
-import * as robot from './robots/dora/adapter.js';
+const robot=getActiveAdapter();
 import { runMode } from './state.js';
 import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
   exportDrills, importDrills, newDrill } from './robots/dora/drills.js';
@@ -15,8 +15,8 @@ let gripDrag=null;
 let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
-function saveStats(){localStorage.setItem('nova_stats',JSON.stringify(appStats));updateStatsUI();}
-// Match Nova's formatDrillName display convention without changing saved IDs/names.
+function saveStats(){localStorage.setItem('openpong_stats',JSON.stringify(appStats));updateStatsUI();}
+// Keep drill display capitalization independent from saved IDs and names.
 const displayDrillName=name=>name.startsWith('cust_')?name:name.replace(/-/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase());
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function status(s){$('dora-status').textContent=s;}
@@ -26,22 +26,9 @@ function setting(id,label,min,max,step=1){
 const fields=[['direction','Direction',0,90],['speed','Speed',20,100],['spin','Spin',0,60],['arc','Arc',-65,65],['frequencyLevel','Frequency',20,170],['angle','Spin angle',0,359]];
 function persist(){saveDrills(drills);renderCards();}
 function refresh(){
- const dora=getActiveRobotId()==='dora';
- $('dora-panel').hidden=!dora;
- $('dora-device-settings').hidden=!dora;
- // Remove controls injected by older Dora builds if any remain.
- for (const id of ['dora-mode','dora-duration','dora-reps']) {
-  const legacy=document.getElementById(id);
-  if (legacy) legacy.closest('label')?.remove();
- }
- document.querySelectorAll('.container > .section-label, .container > .tabs-container, .container > .drill-list').forEach(el=>el.style.display=dora?'none':'');
- $('grp-difficulty').style.display=dora?'none':'';
- // The shared Nova-style Reps/Time switch controls Dora too.
- $('ui-reps').parentElement.style.display='';
- $('input-pause').closest('.control-pill').style.display=dora?'none':'';
- $('ui-reps').querySelector('label').textContent=dora?'Balls':'Count';
- $('robot-select').value=getActiveRobotId();
- document.querySelector('header h1').textContent=dora?'Dora Drill Control':'Nova Drill Control';
+ $('dora-panel').hidden=false;
+ $('dora-device-settings').hidden=false;
+ document.querySelector('header h1').textContent='Dora Drill Control';
 }
 function renderCards(){
  const categoryLabel=c=>c.startsWith('custom-')?'Custom '+c.slice(-1).toUpperCase():c[0].toUpperCase()+c.slice(1);
@@ -163,8 +150,6 @@ function download(text,name){
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 export function initDoraPanel(){
- const selector=document.createElement('label');
- selector.style.cssText='display:block;padding:10px 0;font-size:13px;font-weight:700';
  if (!document.getElementById('dora-hidden-style')) {
   const style=document.createElement('style');style.id='dora-hidden-style';
   style.textContent=`
@@ -183,8 +168,6 @@ export function initDoraPanel(){
   `;
   document.head.appendChild(style);
  }
- selector.innerHTML='ROBOT <select id="robot-select" style="margin-left:10px;padding:8px;border-radius:8px"><option value="nova">Pongbot Nova</option><option value="dora">Pusun Dora</option></select>';
- document.querySelector('.settings-card').prepend(selector);
  // Dora-only controls live alongside shared settings, not in a duplicate drill card.
  const deviceSettings=document.createElement('div');
  deviceSettings.id='dora-device-settings';
@@ -254,7 +237,6 @@ export function initDoraPanel(){
  <p style="font-size:12px">Dora stops automatically when the selected Time or Reps limit is reached. To stop early, use Disconnect or the robot's physical stop control. Pause/resume is not yet supported.</p>`;
  panel.style.display = 'block';
  document.querySelector('.settings-card').after(panel);
- $('robot-select').onchange=e=>{try{selectRobot(e.target.value);refresh();}catch(err){alert(err.message);refresh();}};
  $('dora-tabs').onclick=e=>{const cat=e.target.closest('[data-cat]');if(cat){category=cat.dataset.cat;closeEditor();renderCards();}};
  $('dora-tabs').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const cat=e.target.closest('[data-cat]');if(cat){e.preventDefault();cat.click();}}};
  $('dora-levels').onclick=e=>{const b=e.target.closest('[data-level]');if(b){level=Number(b.dataset.level);closeEditor();renderCards();}};
@@ -362,7 +344,6 @@ export function initDoraPanel(){
   e.target.value='';
  };
  onRobotEvent(event=>{
-  if(getActiveRobotId()!=='dora')return;
   if(event.type==='ballLaunched'){
    launches++;
    if(running){appStats.balls+=1;saveStats();}
