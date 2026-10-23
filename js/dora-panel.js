@@ -26,7 +26,7 @@ function refresh(){
   const legacy=document.getElementById(id);
   if (legacy) legacy.closest('label')?.remove();
  }
- document.querySelectorAll('.container > .section-label, .container > .tabs-container').forEach(el=>el.style.display=dora?'none':'');
+ document.querySelectorAll('.container > .section-label, .container > .tabs-container, .container > .drill-list').forEach(el=>el.style.display=dora?'none':'');
  $('grp-difficulty').style.display=dora?'none':'';
  // The shared Nova-style Reps/Time switch controls Dora too.
  $('ui-reps').parentElement.style.display='';
@@ -36,14 +36,19 @@ function refresh(){
  document.querySelector('header h1').textContent=dora?'OpenPong — Dora':'Nova Drill Control';
 }
 function renderCards(){
- $('dora-tabs').innerHTML=CATEGORIES.map(c=>`<button type="button" class="tab-btn ${category===c?'active':''}" data-cat="${c}">${c.replace('custom-','Custom ').replace(/^./,x=>x.toUpperCase())}</button>`).join('');
+ const categoryLabel=c=>c.startsWith('custom-')?'Custom '+c.slice(-1).toUpperCase():c[0].toUpperCase()+c.slice(1);
+ const iconGrid='<div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div>';
+ $('dora-tabs').innerHTML=CATEGORIES.map(c=>`<div role="tab" tabindex="0" aria-selected="${category===c}" class="tab-btn ${category===c?'active':''}" data-cat="${c}">${iconGrid} ${categoryLabel(c)}</div>`).join('');
  $('dora-levels').innerHTML=[1,2,3].map(i=>`<button class="lvl-dot ${level===i?'active':''}" data-level="${i}" type="button">${i}</button>`).join('');
  $('dora-cards').innerHTML=drills.filter(d=>d.category===category).map(d=>`
- <div style="display:flex;gap:8px;margin:7px 0">
-  <button class="btn-drill" type="button" data-run="${escapeHtml(d.id)}" style="flex:1">${escapeHtml(d.name)}</button>
-  <button class="btn-swap" type="button" data-edit="${escapeHtml(d.id)}" title="Edit drill">✎</button>
+ <div style="display:flex;align-items:stretch;gap:8px;margin:7px 0">
+  <button class="btn-drill" type="button" data-run="${escapeHtml(d.id)}" style="flex:1;min-width:0">
+   <div class="drill-icon"><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div></div>
+   <span>${escapeHtml(d.name)}</span>${d.shuffle?'<div class="mark-random">R</div>':''}
+  </button>
+  <button class="btn-swap" type="button" data-edit="${escapeHtml(d.id)}" title="Edit drill" aria-label="Edit ${escapeHtml(d.name)}">✎</button>
  </div>`).join('')+
- (category.startsWith('custom-')?'<button class="btn-modal btn-save" id="dora-add-drill" type="button">+ New drill</button>':'');
+ (category.startsWith('custom-')?'<div style="display:flex;justify-content:center;margin:15px 0"><button class="btn-swap" id="dora-add-drill" type="button" title="Create new drill" aria-label="Create new drill">＋</button></div>':'');
 }
 function editor(){
  $('dora-editor').hidden=false;
@@ -170,8 +175,9 @@ export function initDoraPanel(){
  </div>
  <div class="section-label">Difficulty Level</div>
  <div id="dora-levels" class="level-select" style="display:flex;gap:12px;justify-content:center;margin:12px"></div>
- <div id="dora-tabs" class="tabs-container" style="display:flex;gap:6px;overflow:auto;margin:12px 0"></div>
- <div id="dora-cards"></div>
+ <div class="section-label">Drill Selection</div>
+ <div id="dora-tabs" class="tabs-container"></div>
+ <div id="dora-cards" class="drill-list"></div>
  <div style="display:flex;gap:9px;margin:16px 0">
   <button id="dora-export" class="btn-modal" type="button">Export</button>
   <button id="dora-import" class="btn-modal" type="button">Import</button>
@@ -195,6 +201,7 @@ export function initDoraPanel(){
  document.querySelector('.settings-card').after(panel);
  $('robot-select').onchange=e=>{try{selectRobot(e.target.value);refresh();}catch(err){alert(err.message);refresh();}};
  $('dora-tabs').onclick=e=>{const cat=e.target.closest('[data-cat]');if(cat){category=cat.dataset.cat;closeEditor();renderCards();}};
+ $('dora-tabs').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const cat=e.target.closest('[data-cat]');if(cat){e.preventDefault();cat.click();}}};
  $('dora-levels').onclick=e=>{const b=e.target.closest('[data-level]');if(b){level=Number(b.dataset.level);closeEditor();renderCards();}};
  $('dora-cards').onclick=e=>{
   const run=e.target.closest('[data-run]'),edit=e.target.closest('[data-edit]');
