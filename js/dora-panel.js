@@ -2,11 +2,13 @@
 // All data lives in the independent openpong_dora_drills_v1 store.
 import { getActiveRobotId, selectRobot, onRobotEvent } from './core/robot-manager.js';
 import * as robot from './robots/dora/adapter.js';
+import { runMode } from './state.js';
 import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
   exportDrills, importDrills, newDrill } from './robots/dora/drills.js';
 
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
-let stopTimer=null, running=false, busy=false, token=0, launches=0, completed=0;
+let stopTimer=null, running=false, busy=false, token=0, launches=0;
+let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,7 +23,10 @@ function refresh(){
  $('dora-panel').hidden=!dora;
  document.querySelectorAll('.container > .section-label, .container > .tabs-container').forEach(el=>el.style.display=dora?'none':'');
  $('grp-difficulty').style.display=dora?'none':'';
- $('ui-reps').parentElement.style.display=dora?'none':'';
+ // The shared Nova-style Reps/Time switch controls Dora too.
+ $('ui-reps').parentElement.style.display='';
+ $('input-pause').closest('.control-pill').style.display=dora?'none':'';
+ $('ui-reps').querySelector('label').textContent=dora?'Balls':'Count';
  $('robot-select').value=getActiveRobotId();
  document.querySelector('header h1').textContent=dora?'OpenPong — Dora':'Nova Drill Control';
 }
@@ -103,11 +108,15 @@ async function startDrill(id){
  if(busy||running)return;
  if(!robot.bleState.isConnected){status('Connect to Dora first');return;}
  const drill=drills.find(d=>d.id===id);if(!drill)return;
- const duration=Number($('dora-duration').value);
- const mode=$('dora-mode').value;
- const repetitions=Number($('dora-reps').value);
- if(!Number.isInteger(duration)||duration<1||duration>3600||
-  !Number.isInteger(repetitions)||repetitions<1||repetitions>10000){status('Invalid run settings');return;}
+ const mode=runMode;
+ const duration=Number($('input-time').value);
+ const repetitions=Number($('input-reps').value);
+ if ((mode==='time' && (!Number.isInteger(duration)||duration<1||duration>3600)) ||
+     (mode==='reps' && (!Number.isInteger(repetitions)||repetitions<1||repetitions>10000))) {
+  status('Invalid '+(mode==='time'?'duration':'ball count'));return;
+ }
+ activeMode=mode;
+ activeTarget=mode==='time'?duration:repetitions;
  const runId=++token;busy=true;launches=0;completed=0;
  $('dora-count').textContent='0';
  $('dora-stop').disabled=false;
@@ -146,11 +155,6 @@ export function initDoraPanel(){
  panel.innerHTML=`
  <div class="settings-card" style="margin:14px 0">
   <h2 style="margin:0 0 10px">Dora Drill Control</h2>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-   <label>Mode <select id="dora-mode"><option value="time">Time</option><option value="balls">Balls</option></select></label>
-   <label>Time (s) <input id="dora-duration" type="number" min="1" max="3600" value="60" style="width:75px"></label>
-   <label>Balls <input id="dora-reps" type="number" min="1" max="10000" value="20" style="width:75px"></label>
-  </div>
   <div style="display:flex;gap:10px;margin-top:12px">
    <button id="dora-stop" class="btn-connect" type="button" style="background:#be3636;color:white" disabled>STOP</button>
    <strong id="dora-count" style="align-self:center">0</strong> launches
@@ -227,10 +231,10 @@ export function initDoraPanel(){
   if(getActiveRobotId()!=='dora')return;
   if(event.type==='ballLaunched'){
    launches++;$('dora-count').textContent=String(launches);
-   if(running&&$('dora-mode').value==='balls'&&launches>=Number($('dora-reps').value))void stop();
+   if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
-  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);running=false;status('Disconnected — verify robot has stopped');}
+  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;status('Disconnected — verify robot has stopped');}
  });
  renderCards();refresh();
 }
