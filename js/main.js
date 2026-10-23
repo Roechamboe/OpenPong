@@ -47,7 +47,7 @@ import {
 } from './runner.js';
 
 import { downloadDrill } from './cloud.js';
-import { initDoraPanel } from './dora-panel.js?v=dora-clean-ui-v6';
+import { initDoraPanel } from './dora-panel.js?v=dora-editor-layout-v7';
 
 // --- Initialization ---
 
