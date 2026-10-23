@@ -2,7 +2,7 @@ import {setMode,resetStats} from './state.js';
 import {setTheme,toggleMenu,updateStatsUI} from './ui.js';
 import {connectDevice,disconnectDevice,bleState} from './bluetooth.js';
 import {onRobotEvent} from './core/robot-manager.js';
-import {initDoraPanel} from './dora-panel.js?v=dora-standalone-v2';
+import {initDoraPanel} from './dora-panel.js?v=dora-standalone-v3';
 function updateConnection(){
  const connected=bleState.isConnected;
  document.getElementById('btn-connect').textContent=connected?'Disconnect':'Connect';
@@ -16,6 +16,22 @@ window.setMode=(mode,btn)=>{
 };
 window.setTheme=setTheme;
 window.toggleMenu=toggleMenu;
+window.openDoraSettings=()=>{
+ document.getElementById('theme-menu').classList.remove('open');
+ const page=document.getElementById('dora-settings-page');
+ page.hidden=false;
+ document.body.style.overflow='hidden';
+ page.querySelector('button').focus();
+};
+window.closeDoraSettings=()=>{
+ document.getElementById('dora-settings-page').hidden=true;
+ document.body.style.overflow='';
+ document.querySelector('.menu-btn')?.focus();
+};
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&!document.getElementById('dora-settings-page').hidden)window.closeDoraSettings();
+});
+
 window.resetStats=()=>{
  if(!confirm('Reset training statistics?'))return;
  resetStats();updateStatsUI();toggleMenu();
