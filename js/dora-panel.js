@@ -16,6 +16,8 @@ let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
 function saveStats(){localStorage.setItem('nova_stats',JSON.stringify(appStats));updateStatsUI();}
+// Match Nova's formatDrillName display convention without changing saved IDs/names.
+const displayDrillName=name=>name.startsWith('cust_')?name:name.replace(/-/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase());
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function status(s){$('dora-status').textContent=s;}
 function setting(id,label,min,max,step=1){
@@ -39,7 +41,7 @@ function refresh(){
  $('input-pause').closest('.control-pill').style.display=dora?'none':'';
  $('ui-reps').querySelector('label').textContent=dora?'Balls':'Count';
  $('robot-select').value=getActiveRobotId();
- document.querySelector('header h1').textContent=dora?'OpenPong — Dora':'Nova Drill Control';
+ document.querySelector('header h1').textContent=dora?'Dora Drill Control':'Nova Drill Control';
 }
 function renderCards(){
  const categoryLabel=c=>c.startsWith('custom-')?'Custom '+c.slice(-1).toUpperCase():c[0].toUpperCase()+c.slice(1);
@@ -49,7 +51,7 @@ function renderCards(){
  $('dora-cards').innerHTML=drills.filter(d=>d.category===category).map(d=>`
  <button class="btn-drill" type="button" data-run="${escapeHtml(d.id)}" style="width:100%">
   <div class="drill-icon"><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div></div>
-  <span>${escapeHtml(d.name)}</span>${d.shuffle?'<div class="mark-random">R</div>':''}
+  <span>${escapeHtml(displayDrillName(d.name))}</span>${d.shuffle?'<div class="mark-random">R</div>':''}
   <div class="drill-grab-handle" data-edit="${escapeHtml(d.id)}" title="Drag to reorder; tap to edit" aria-label="Drag to reorder ${escapeHtml(d.name)}; tap to edit" role="button" tabindex="0">≡</div>
  </button>`).join('')+
  (category.startsWith('custom-')?'<div style="display:flex;justify-content:center;margin:15px 0"><button class="btn-swap" id="dora-add-drill" type="button" title="Create new drill" aria-label="Create new drill">＋</button></div>':'');
