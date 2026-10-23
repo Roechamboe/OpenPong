@@ -1,6 +1,6 @@
-// Dora drill UI mirrors the Nova workflow while using Dora-native values.
+// Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
-import { getActiveRobotId, onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
+import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
 const robot=getActiveAdapter();
@@ -16,7 +16,7 @@ let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
 function saveStats(){localStorage.setItem('openpong_stats',JSON.stringify(appStats));updateStatsUI();}
-// Match Nova's formatDrillName display convention without changing saved IDs/names.
+// Keep drill display capitalization independent from saved IDs and names.
 const displayDrillName=name=>name.startsWith('cust_')?name:name.replace(/-/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase());
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function status(s){$('dora-status').textContent=s;}
