@@ -1,6 +1,6 @@
 # Nova S Pro Drill Control
 
-A pretty web client for the Nova S Pro table tennis robot. 
+A pretty web client for the Nova S Pro and Dora Smart Pro table tennis robot. 
 This tool can be used as a replacement for the original app, removing the requirements for server connectivity and user login.
 
 | Main | Editor | Countdown |
@@ -17,10 +17,6 @@ This tool can be used as a replacement for the original app, removing the requir
 **Local:**
 
   * Download repository files and host locally (e.g., `python3 -m http.server`).
-
-**Docker:**
-
-  * visit https://github.com/elton-bt/nova
 
 **Requirements:**
 
