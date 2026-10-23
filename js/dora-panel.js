@@ -1,6 +1,8 @@
 // Dora drill UI mirrors the Nova workflow while using Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
 import { getActiveRobotId, selectRobot, onRobotEvent } from './core/robot-manager.js';
+import { appStats } from './state.js';
+import { updateStatsUI } from './ui.js';
 import * as robot from './robots/dora/adapter.js';
 import { runMode } from './state.js';
 import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
@@ -11,6 +13,7 @@ let stopTimer=null, running=false, busy=false, token=0, launches=0;
 let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
+function saveStats(){localStorage.setItem('nova_stats',JSON.stringify(appStats));updateStatsUI();}
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function status(s){$('dora-status').textContent=s;}
 function setting(id,label,min,max,step=1){
@@ -128,8 +131,7 @@ async function startDrill(id){
  }
  activeMode=mode;
  activeTarget=mode==='time'?duration:repetitions;
- const runId=++token;busy=true;launches=0;completed=0;
- $('dora-count').textContent='0';
+ const runId=++token;busy=true;launches=0;
  $('dora-stop').disabled=false;
  try {
   // Repetitions are counted from launch notifications; unlike Nova these are
@@ -140,6 +142,8 @@ async function startDrill(id){
   if(runId!==token)return;
   await robot.startTraining();
   running=true;
+  appStats.drills+=1;
+  saveStats();
   status(`Running: ${escapeHtml(drill.name)}`);
   if(mode==='time')stopTimer=setTimeout(()=>{void stop();},duration*1000);
  } catch(err) {
@@ -169,7 +173,7 @@ export function initDoraPanel(){
   <small style="color:var(--text-light)">Build: dora-controls-v2 · uses Reps / Time above</small>
   <div style="display:flex;gap:10px;margin-top:12px">
    <button id="dora-stop" class="btn-connect" type="button" style="background:#be3636;color:white" disabled>STOP</button>
-   <strong id="dora-count" style="align-self:center">0</strong> launches
+
   </div>
   <p id="dora-status" role="status" aria-live="polite">Connect to Dora to start</p>
  </div>
@@ -244,7 +248,8 @@ export function initDoraPanel(){
  onRobotEvent(event=>{
   if(getActiveRobotId()!=='dora')return;
   if(event.type==='ballLaunched'){
-   launches++;$('dora-count').textContent=String(launches);
+   launches++;
+   if(running){appStats.balls+=1;saveStats();}
    if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
