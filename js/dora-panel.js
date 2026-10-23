@@ -135,6 +135,11 @@ function download(text,name){
 export function initDoraPanel(){
  const selector=document.createElement('label');
  selector.style.cssText='display:block;padding:10px 0;font-size:13px;font-weight:700';
+ if (!document.getElementById('dora-hidden-style')) {
+  const style=document.createElement('style');style.id='dora-hidden-style';
+  style.textContent='#dora-panel[hidden], #dora-editor[hidden] { display:none !important; }';
+  document.head.appendChild(style);
+ }
  selector.innerHTML='ROBOT <select id="robot-select" style="margin-left:10px;padding:8px;border-radius:8px"><option value="nova">Pongbot Nova</option><option value="dora">Pusun Dora</option></select>';
  document.querySelector('.settings-card').prepend(selector);
  const panel=document.createElement('section');panel.id='dora-panel';panel.hidden=true;
@@ -175,6 +180,7 @@ export function initDoraPanel(){
   </div>
  </section>
  <p style="font-size:12px">Dora uses an autonomous ball cycle. In Balls mode the controller stops after the requested number of launch notifications. Pause/resume is not yet supported. Keep the robot's physical stop accessible.</p>`;
+ panel.style.display = 'block';
  document.querySelector('.settings-card').after(panel);
  $('robot-select').onchange=e=>{try{selectRobot(e.target.value);refresh();}catch(err){alert(err.message);refresh();}};
  $('dora-tabs').onclick=e=>{const cat=e.target.closest('[data-cat]');if(cat){category=cat.dataset.cat;closeEditor();renderCards();}};
