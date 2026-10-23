@@ -1,4 +1,4 @@
-# Nova S Pro Drill Control
+# Table Tennis Robot Drill Control
 
 A pretty web client for the Nova S Pro and Dora Smart Pro table tennis robot. 
 This tool can be used as a replacement for the original app, removing the requirements for server connectivity and user login.
