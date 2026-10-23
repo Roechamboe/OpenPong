@@ -185,7 +185,7 @@ export function initDoraPanel(){
   </label>
  </div>
  <p id="dora-settings-status" role="status" aria-live="polite" style="font-size:0.75rem;color:var(--text-light);margin:6px 0 0">Connect Dora to adjust settings</p>`;
- document.getElementById('dora-settings-page').append(deviceSettings);
+ document.getElementById('dora-device-settings-card').append(deviceSettings);
  // Do not send unverified saved preferences on connection automatically:
  // sliders show a neutral starting position until explicitly adjusted.
  for(const [name,min,max,send] of [
@@ -230,7 +230,7 @@ export function initDoraPanel(){
  </section>
  <p style="font-size:12px">Dora stops automatically when the selected Time or Reps limit is reached. To stop early, use Disconnect or the robot's physical stop control. Pause/resume is not yet supported.</p>`;
  panel.style.display = 'block';
- document.querySelector('.settings-card').after(panel);
+ document.getElementById('training-settings-card').after(panel);
  $('dora-tabs').onclick=e=>{const cat=e.target.closest('[data-cat]');if(cat){category=cat.dataset.cat;closeEditor();renderCards();}};
  $('dora-tabs').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const cat=e.target.closest('[data-cat]');if(cat){e.preventDefault();cat.click();}}};
  $('dora-levels').onclick=e=>{const b=e.target.closest('[data-level]');if(b){level=Number(b.dataset.level);closeEditor();renderCards();}};
