@@ -47,7 +47,7 @@ import {
 } from './runner.js';
 
 import { downloadDrill } from './cloud.js';
-import { initDoraPanel } from './dora-panel.js?v=dora-grip-v9';
+import { initDoraPanel } from './dora-panel.js?v=dora-reorder-v10';
 
 // --- Initialization ---
 
