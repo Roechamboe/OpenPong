@@ -75,10 +75,10 @@ function editor(){
    <div style="display:flex;justify-content:space-between"><b>Variant ${j+1}</b>
    ${options.length>1?`<button data-action="remove-option" data-step="${i}" data-opt="${j}" type="button">Remove</button>`:''}</div>
    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px">
-   ${fields.map(([key,label,min,max])=>`<label class="editor-field" style="display:flex;flex-direction:column"><span>${label}</span><input data-step="${i}" data-opt="${j}" data-param="${key}" type="number" step="1" min="${min}" max="${max}" value="${b[key]}" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px"></label>`).join('')}
+   ${fields.map(([key,label,min,max])=>`<label class="dora-param-field"><span>${label}</span><input data-step="${i}" data-opt="${j}" data-param="${key}" type="number" step="1" min="${min}" max="${max}" value="${b[key]}" class="dora-param-input"></label>`).join('')}
    </div>
   </div>`).join('')}
-  <button type="button" class="btn-swap" data-action="variant" data-step="${i}">+ Variant</button>
+  <button type="button" class="dora-add-button" data-action="variant" data-step="${i}">+ Variant</button>
  </div>`).join('');
  $('dora-add-step').disabled=steps.length>=28;
 }
@@ -159,7 +159,26 @@ export function initDoraPanel(){
  selector.style.cssText='display:block;padding:10px 0;font-size:13px;font-weight:700';
  if (!document.getElementById('dora-hidden-style')) {
   const style=document.createElement('style');style.id='dora-hidden-style';
-  style.textContent='#dora-panel[hidden], #dora-editor[hidden] { display:none !important; }';
+  style.textContent=`
+    #dora-panel[hidden], #dora-editor[hidden] { display:none !important; }
+    #dora-editor, #dora-editor * { box-sizing:border-box; }
+    #dora-editor .dora-param-field { min-width:0; width:100%; display:flex; flex-direction:column;
+      gap:5px; padding:9px; border:1px solid var(--border); border-radius:9px;
+      background:var(--surface); font-size:0.8rem; }
+    #dora-editor .dora-param-field > span { display:block; font-weight:700; font-size:0.75rem;
+      color:var(--text-light); line-height:1.25; }
+    #dora-editor .dora-param-input { display:block; width:100%; min-width:0; max-width:100%;
+      margin:0; padding:8px 4px; border:1px solid var(--border); border-radius:6px;
+      background:var(--bg); color:var(--text); text-align:center; font:inherit; font-size:1rem; }
+    #dora-editor .dora-add-button { width:auto; height:auto; min-height:38px; max-width:100%;
+      display:inline-flex; align-items:center; justify-content:center; padding:8px 14px;
+      margin:8px 0; border:1px solid var(--border); border-radius:9px;
+      background:var(--surface); color:var(--text); font-size:0.85rem; font-weight:700; }
+    #dora-editor .option-card { min-width:0; max-width:100%; }
+    #dora-editor .group-title button { flex:0 0 auto; min-width:30px; }
+    @media(max-width:390px) { #dora-editor .dora-param-field {padding:6px;}
+      #dora-editor .option-card {padding:7px !important;} }
+  `;
   document.head.appendChild(style);
  }
  selector.innerHTML='ROBOT <select id="robot-select" style="margin-left:10px;padding:8px;border-radius:8px"><option value="nova">Pongbot Nova</option><option value="dora">Pusun Dora</option></select>';
@@ -183,7 +202,7 @@ export function initDoraPanel(){
   <label><input id="dora-editor-shuffle" type="checkbox"> Shuffle ball order each run</label>
   <p style="font-size:12px">Variants are selected randomly per shot. Scatter is applied to direction.</p>
   <div id="dora-steps"></div>
-  <button id="dora-add-step" class="btn-swap" type="button">+ Ball</button>
+  <button id="dora-add-step" class="dora-add-button" type="button">+ Ball</button>
   <div style="display:flex;gap:8px;margin:12px 0">
    <button id="dora-save" class="btn-modal btn-save" type="button">Save</button>
    <button id="dora-cancel" class="btn-modal" type="button">Cancel</button>
