@@ -21,6 +21,11 @@ function persist(){saveDrills(drills);renderCards();}
 function refresh(){
  const dora=getActiveRobotId()==='dora';
  $('dora-panel').hidden=!dora;
+ // Remove controls injected by older Dora builds if any remain.
+ for (const id of ['dora-mode','dora-duration','dora-reps']) {
+  const legacy=document.getElementById(id);
+  if (legacy) legacy.closest('label')?.remove();
+ }
  document.querySelectorAll('.container > .section-label, .container > .tabs-container').forEach(el=>el.style.display=dora?'none':'');
  $('grp-difficulty').style.display=dora?'none':'';
  // The shared Nova-style Reps/Time switch controls Dora too.
@@ -156,6 +161,7 @@ export function initDoraPanel(){
  panel.innerHTML=`
  <div class="settings-card" style="margin:14px 0">
   <h2 style="margin:0 0 10px">Dora Drill Control</h2>
+  <small style="color:var(--text-light)">Build: dora-controls-v2 · uses Reps / Time above</small>
   <div style="display:flex;gap:10px;margin-top:12px">
    <button id="dora-stop" class="btn-connect" type="button" style="background:#be3636;color:white" disabled>STOP</button>
    <strong id="dora-count" style="align-self:center">0</strong> launches
