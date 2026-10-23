@@ -113,7 +113,6 @@ function modifyEditor(event){
 }
 async function stop(){
  token++;clearTimeout(stopTimer);stopTimer=null;running=false;
- $('dora-stop').disabled=true;
  if(!robot.bleState.isConnected){status('Disconnected. Verify physical stop.');return;}
  try{await robot.stopTraining();status('Stopped');}
  catch(e){status('STOP FAILED: '+e.message);}
@@ -132,7 +131,6 @@ async function startDrill(id){
  activeMode=mode;
  activeTarget=mode==='time'?duration:repetitions;
  const runId=++token;busy=true;launches=0;
- $('dora-stop').disabled=false;
  try {
   // Repetitions are counted from launch notifications; unlike Nova these are
   // not per-sequence completion callbacks. Hardware may emit fewer during a stop.
@@ -149,7 +147,7 @@ async function startDrill(id){
  } catch(err) {
   status('Start error: '+err.message);
   if(robot.isRunning())await stop();
- } finally{busy=false; if(!running)$('dora-stop').disabled=true;}
+ } finally{busy=false;}
 }
 function download(text,name){
  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
@@ -171,10 +169,6 @@ export function initDoraPanel(){
  <div class="settings-card" style="margin:14px 0">
   <h2 style="margin:0 0 10px">Dora Drill Control</h2>
   <small style="color:var(--text-light)">Build: dora-controls-v2 · uses Reps / Time above</small>
-  <div style="display:flex;gap:10px;margin-top:12px">
-   <button id="dora-stop" class="btn-connect" type="button" style="background:#be3636;color:white" disabled>STOP</button>
-
-  </div>
   <p id="dora-status" role="status" aria-live="polite">Connect to Dora to start</p>
  </div>
  <div class="section-label">Difficulty Level</div>
@@ -200,7 +194,7 @@ export function initDoraPanel(){
    <button id="dora-delete" class="btn-modal" type="button">Delete</button>
   </div>
  </section>
- <p style="font-size:12px">Dora uses an autonomous ball cycle. In Balls mode the controller stops after the requested number of launch notifications. Pause/resume is not yet supported. Keep the robot's physical stop accessible.</p>`;
+ <p style="font-size:12px">Dora stops automatically when the selected Time or Reps limit is reached. To stop early, use Disconnect or the robot's physical stop control. Pause/resume is not yet supported.</p>`;
  panel.style.display = 'block';
  document.querySelector('.settings-card').after(panel);
  $('robot-select').onchange=e=>{try{selectRobot(e.target.value);refresh();}catch(err){alert(err.message);refresh();}};
@@ -216,7 +210,6 @@ export function initDoraPanel(){
    const d=newDrill(name.trim().slice(0,40),category);drills.push(d);persist();openEditor(d.id);
   }
  };
- $('dora-stop').onclick=()=>void stop();
  $('dora-editor').onchange=modifyEditor;
  $('dora-steps').onclick=e=>{
   const btn=e.target.closest('[data-action]');if(!btn)return;
@@ -253,7 +246,7 @@ export function initDoraPanel(){
    if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
-  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;$('dora-stop').disabled=true;status('Disconnected — verify robot has stopped');}
+  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;status('Disconnected — verify robot has stopped');}
  });
  renderCards();refresh();
 }
