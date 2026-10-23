@@ -11,6 +11,7 @@ import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
 let stopTimer=null, running=false, busy=false, token=0, launches=0;
 let holdTimer=null, holdStart=null, suppressRunClick=false;
+let gripDrag=null;
 let activeMode='time', activeTarget=0;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -48,7 +49,7 @@ function renderCards(){
  <button class="btn-drill" type="button" data-run="${escapeHtml(d.id)}" style="width:100%">
   <div class="drill-icon"><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div><div class="d-dot"></div></div>
   <span>${escapeHtml(d.name)}</span>${d.shuffle?'<div class="mark-random">R</div>':''}
-  <div class="drill-grab-handle" data-edit="${escapeHtml(d.id)}" title="Edit drill (hold to edit; grip for drag in Nova)" aria-label="Edit ${escapeHtml(d.name)}" role="button" tabindex="0">≡</div>
+  <div class="drill-grab-handle" data-edit="${escapeHtml(d.id)}" title="Drag to reorder; tap to edit" aria-label="Drag to reorder ${escapeHtml(d.name)}; tap to edit" role="button" tabindex="0">≡</div>
  </button>`).join('')+
  (category.startsWith('custom-')?'<div style="display:flex;justify-content:center;margin:15px 0"><button class="btn-swap" id="dora-add-drill" type="button" title="Create new drill" aria-label="Create new drill">＋</button></div>':'');
 }
@@ -173,6 +174,8 @@ export function initDoraPanel(){
     #dora-editor .dora-add-step-button { width:100%; max-width:180px; margin:12px auto; }
     #dora-editor .btn-action:disabled {opacity:.35;cursor:not-allowed;}
     #dora-editor .group-title button { flex:0 0 auto; min-width:30px; }
+    #dora-cards .drill-grab-handle {touch-action:none; user-select:none;}
+    #dora-cards .btn-drill.dragging {opacity:0.65;border-color:var(--primary);}
     @media(max-width:390px) { #dora-editor .editor-grid {grid-template-columns:repeat(2,minmax(0,1fr));} }
   `;
   document.head.appendChild(style);
@@ -214,13 +217,59 @@ export function initDoraPanel(){
  $('dora-levels').onclick=e=>{const b=e.target.closest('[data-level]');if(b){level=Number(b.dataset.level);closeEditor();renderCards();}};
  $('dora-cards').onclick=e=>{
   const run=e.target.closest('[data-run]'),edit=e.target.closest('[data-edit]');
-  if(edit){e.stopPropagation();openEditor(edit.dataset.edit);return;}
+  if(edit){e.stopPropagation();if(suppressRunClick){suppressRunClick=false;return;}openEditor(edit.dataset.edit);return;}
   if(run){if(suppressRunClick){suppressRunClick=false;return;}void startDrill(run.dataset.run);}
   if(e.target.closest('#dora-add-drill')){
    const name=prompt('Name of new Dora drill');if(!name?.trim())return;
    const d=newDrill(name.trim().slice(0,40),category);drills.push(d);persist();openEditor(d.id);
   }
  };
+ // The grip supports mouse, pen and touch pointer dragging.
+ // Store order in the existing Dora drill array, preserving all fields.
+ const list=$('dora-cards');
+ const finishGripDrag=event=>{
+  if(!gripDrag||event.pointerId!==gripDrag.pointerId)return;
+  const {grip,row,moved}=gripDrag;
+  if(grip.hasPointerCapture?.(event.pointerId))grip.releasePointerCapture(event.pointerId);
+  row.classList.remove('dragging');
+  gripDrag=null;
+  if(moved){
+   suppressRunClick=true;
+   const ids=[...list.querySelectorAll('.btn-drill[data-run]')].map(el=>el.dataset.run);
+   const reordered=ids.map(id=>drills.find(d=>d.id===id));
+   const positions=drills.map((d,i)=>d.category===category?i:-1).filter(i=>i!==-1);
+   if(reordered.length!==positions.length||reordered.some(d=>!d))return;
+   positions.forEach((position,i)=>{drills[position]=reordered[i];});
+   saveDrills(drills);
+   // Allow a subsequent normal click immediately after the pointer gesture.
+   setTimeout(()=>{suppressRunClick=false;},0);
+  }
+ };
+ list.addEventListener('pointerdown',event=>{
+  const grip=event.target.closest('.drill-grab-handle');
+  if(!grip||event.button!==0)return;
+  const row=grip.closest('.btn-drill[data-run]');
+  if(!row)return;
+  clearTimeout(holdTimer);holdStart=null;
+  gripDrag={grip,row,pointerId:event.pointerId,x:event.clientX,y:event.clientY,moved:false};
+  grip.setPointerCapture(event.pointerId);
+ });
+ list.addEventListener('pointermove',event=>{
+  if(!gripDrag||gripDrag.pointerId!==event.pointerId)return;
+  const d=gripDrag;
+  if(!d.moved && Math.hypot(event.clientX-d.x,event.clientY-d.y)<7)return;
+  if(!d.moved){d.moved=true;d.row.classList.add('dragging');}
+  const rows=[...list.querySelectorAll('.btn-drill[data-run]')].filter(row=>row!==d.row);
+  // Compare the pointer to the center of each row. This works for touch too.
+  const destination=rows.find(row=>event.clientY<row.getBoundingClientRect().top+row.offsetHeight/2);
+  if(destination)list.insertBefore(d.row,destination);
+  else{
+   const last=rows.at(-1);
+   if(last)list.insertBefore(d.row,last.nextSibling);
+  }
+ });
+ list.addEventListener('pointerup',finishGripDrag);
+ list.addEventListener('pointercancel',finishGripDrag);
  // Match Nova: a sustained press edits, a quick tap runs.
  $('dora-cards').addEventListener('pointerdown',e=>{
   if(e.target.closest('.drill-grab-handle'))return;
