@@ -1,7 +1,7 @@
 // Pusun Dora Smart Pro TT — Web Bluetooth device adapter.
 // Protocol serialization lives in protocol.js; no Nova authentication is used.
 import { DORA_BLE, DORA, encodeBall, encodeSequence, encodeStart, encodeStop,
-  encodeFollowUp, encodeBrightness, encodeVolume, isLaunchNotification } from './protocol.js';
+  encodeFollowUp, encodeBrightness, encodeVolume, encodeLightMode, isLaunchNotification } from './protocol.js';
 
 export const bleState = { isConnected: false, device: null, writeChar: null, notifyChar: null };
 let eventHandler = null;
@@ -110,6 +110,11 @@ export async function stopTraining({ byte8 = 0 } = {}) {
 }
 export function setBrightness(level) { return sendPacket(encodeBrightness(level)); }
 export function setVolume(level) { return sendPacket(encodeVolume(level)); }
+export async function setLightMode(mode) {
+  await sendPacket(encodeLightMode(mode));
+  await sleep(50);
+  await sendPacket(encodeFollowUp());
+}
 export function isRunning() { return running; }
 // Compatibility export only. Dora's 15-byte ball codec is not compatible with
 // Nova's packBall(upperWheel,lowerWheel,...) format.
