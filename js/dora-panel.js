@@ -55,7 +55,7 @@ function editor(){
    <div style="display:flex;gap:5px">
     <button type="button" data-action="up" data-step="${i}">↑</button>
     <button type="button" data-action="down" data-step="${i}">↓</button>
-    <button type="button" data-action="duplicate" data-step="${i}">⧉</button>
+    <button type="button" class="btn-add-opt" data-action="duplicate" data-step="${i}" title="Duplicate Ball" aria-label="Duplicate Ball ${i+1}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
     <button type="button" data-action="remove" data-step="${i}">×</button>
    </div>
   </div>
@@ -74,8 +74,7 @@ function editor(){
      <button type="button" class="btn-action btn-act-del" data-action="remove-option" data-step="${i}" data-opt="${j}" ${options.length===1?'disabled':''}>Delete</button>
     </div>
   </div>`).join('')}
- </div>`).join('');
- $('dora-add-step').disabled=steps.length>=28;
+ </div>`).join('')+`<div class="swap-zone" style="margin:-10px 0 20px"><button id="dora-add-step" class="btn-swap" type="button" data-action="add-step" title="Add New Ball" aria-label="Add New Ball" ${steps.length>=28?'disabled':''} style="color:var(--primary);border-color:var(--primary);width:32px;height:32px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>`;
 }
 function openEditor(id){
  const found=drills.find(d=>d.id===id);if(!found)return;
@@ -186,7 +185,7 @@ export function initDoraPanel(){
   </label>
  </div>
  <p id="dora-settings-status" role="status" aria-live="polite" style="font-size:0.75rem;color:var(--text-light);margin:6px 0 0">Connect Dora to adjust settings</p>`;
- document.querySelector('.settings-card').append(deviceSettings);
+ document.getElementById('dora-settings-page').append(deviceSettings);
  // Do not send unverified saved preferences on connection automatically:
  // sliders show a neutral starting position until explicitly adjusted.
  for(const [name,min,max,send] of [
@@ -216,18 +215,13 @@ export function initDoraPanel(){
  <div class="section-label">Drill Selection</div>
  <div id="dora-tabs" class="tabs-container"></div>
  <div id="dora-cards" class="drill-list"></div>
- <div style="display:flex;gap:9px;margin:16px 0">
-  <button id="dora-export" class="btn-modal" type="button">Export</button>
-  <button id="dora-import" class="btn-modal" type="button">Import</button>
-  <input id="dora-import-file" type="file" accept=".json" hidden>
- </div>
+
  <section id="dora-editor" class="modal" hidden style="position:relative;width:100%;max-width:none;padding:14px;margin:14px 0;background:var(--card,var(--bg));border:1px solid var(--border)">
   <h2>Edit Dora drill</h2>
   <label>Drill name <input id="dora-editor-name" maxlength="40" style="width:100%;padding:8px"></label>
   <label><input id="dora-editor-shuffle" type="checkbox"> Shuffle ball order each run</label>
   <p style="font-size:12px">Variants are selected randomly per shot. Scatter is applied to direction.</p>
   <div id="dora-steps"></div>
-  <button id="dora-add-step" class="btn-action btn-act-clone dora-add-step-button" type="button">+ Ball</button>
   <div style="display:flex;gap:8px;margin:12px 0">
    <button id="dora-save" class="btn-modal btn-save" type="button">Save</button>
    <button id="dora-cancel" class="btn-modal" type="button">Cancel</button>
@@ -323,20 +317,20 @@ export function initDoraPanel(){
    case 'up': if(i>0)[steps[i-1],steps[i]]=[steps[i],steps[i-1]];break;
    case 'down':if(i<steps.length-1)[steps[i+1],steps[i]]=[steps[i],steps[i+1]];break;
    case 'duplicate':if(steps.length<28)steps.splice(i+1,0,clone(steps[i]));break;
+   case 'add-step':if(steps.length<28)steps.push(clone(steps[steps.length-1]||[DEFAULT_BALL]));break;
    case 'remove':if(steps.length>1)steps.splice(i,1);break;
    case 'variant':if(steps[i].length<12)steps[i].push(clone(steps[i][0]));break;
    case 'remove-option':if(steps[i].length>1)steps[i].splice(j,1);break;
   }editor();
  };
- $('dora-add-step').onclick=()=>{if(draft.levels[level-1].length<28){draft.levels[level-1].push([clone(DEFAULT_BALL)]);editor();}};
  $('dora-save').onclick=()=>{try{commitEditor();status('Drill saved');}catch(err){alert(err.message);}};
  $('dora-cancel').onclick=closeEditor;
  $('dora-delete').onclick=()=>{
   if(!editing||!confirm('Delete this Dora drill?'))return;
   drills=drills.filter(d=>d.id!==editing);persist();closeEditor();
  };
- $('dora-export').onclick=()=>download(exportDrills(drills),'openpong-dora-drills.json');
- $('dora-import').onclick=()=>$('dora-import-file').click();
+ $('dora-export').onclick=()=>{download(exportDrills(drills),'openpong-dora-drills.json');document.getElementById('theme-menu').classList.remove('open');};
+ $('dora-import').onclick=()=>{document.getElementById('theme-menu').classList.remove('open');$('dora-import-file').click();};
  $('dora-import-file').onchange=async e=>{
   const file=e.target.files[0];if(!file)return;
   try{drills=importDrills(await file.text());persist();closeEditor();status('Imported Dora drills');}
