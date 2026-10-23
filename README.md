@@ -1,95 +1,47 @@
-# Nova S Pro Drill Control
+# OpenPong · Dora Drill Control
 
-A pretty web client for the Nova S Pro table tennis robot. 
-This tool can be used as a replacement for the original app, removing the requirements for server connectivity and user login.
+A browser-based Web Bluetooth drill controller for the **Pusun Dora Smart Pro TT** table-tennis robot.
 
-| Main | Editor | Countdown |
-| :---: | :---: | :---: |
-| <img src="./images/main.png" width="300"> | <img src="./images/editor.png" width="300"> | <img src="./images/countdown.png" width="300"> |
+This standalone fork keeps a **modular robot adapter API** so contributors can add support for other robots later. It does not ship Nova BLE commands, RPM conversions, or Nova-specific training logic.
 
-## Usage
+## Running
 
-**Online/Offline:**
+- Serve this directory over HTTPS (GitHub Pages works), or locally from `localhost` with a static HTTP server.
+- Open it in a Chromium-based browser with Web Bluetooth support and select **Connect**.
+- Choose a drill, difficulty 1–3, and either a ball count or duration.
+- Tap a drill to start; long-press or tap the ≡ grip to edit; drag the grip to reorder.
+- To stop early, disconnect from the UI or use the robot's physical stop button.
 
-  * Visit: [https://olanga.github.io/nova/](https://olanga.github.io/nova/)
-  * Self hosting: https is required
+**Hardware safety:** Session stopping is sent over BLE. Always keep the robot's physical stop accessible, especially while testing unfamiliar shot parameters.
 
-**Local:**
+## Dora functions
 
-  * Download repository files and host locally (e.g., `python3 -m http.server`).
+- Native 15-byte BLE messages over service FFF0, with notifications on FFF1 and writes on FFF2.
+- 34 Nova-inspired factory *patterns* mapped to Dora-native direction, speed, spin, arc, frequency, and spin angle. These are approximate starting values, **not hardware-calibrated shot equivalences**.
+- Basic, Combined, Complex and Custom A/B/C libraries.
+- Three difficulty levels, ball variants, shuffle, scatter and reorder.
+- Reps (launch notifications) and Time limits; saved cumulative ball/drill counters.
+- Native Dora volume and brightness controls.
+- JSON drill import/export; data saved in browser local storage.
 
-**Docker:**
+**Not yet validated:** All drill presets, multi-ball operation, and volume/brightness commands require further physical testing. Pause/resume is not supported.
 
-  * visit https://github.com/elton-bt/nova
+## Extending the robot abstraction
 
-**Requirements:**
+`js/core/robot-manager.js` exports:
 
-  * Chrome, Cromite or any other Chromium-based browser. iPhone is not supported as it uses Webkit browser engine.
+- `registerAdapter(id, adapter)`
+- `getRobotIds()`, `getActiveRobotId()`, `getActiveAdapter()`
+- `selectRobot(id)`, `onRobotEvent(listener)`
 
-## Features
+Every adapter must export `bleState`, `connectDevice`, `disconnectDevice`, `sendPacket`, and `setEventHandler`. Adapters emit structured events such as `ready`, `disconnected`, and `ballLaunched`.
 
-**General**
+The Dora adapter lives in `js/robots/dora/`. Future implementations can add a separate adapter and their own drill-model translator without coupling the UI to a second protocol. The standalone UI currently exposes Dora-native fields; abstracting editor parameter schemas for additional robots is future work.
 
-  * **Fully customizable drills** Add and remove drills and balls. Share, export and import settings.
-  * **Data Persistence:** Settings and drills saved to browser local storage.
-  * **Themes:** 4 options, including dark mode.
-  * **Stratistics:**  accumulated counters (total balls/drills).<br>
+## Data migration
 
+Existing Dora drill storage (`openpong_dora_drills_v1`) remains unchanged. Aggregate statistics migrate from the legacy `nova_stats` key to `openpong_stats` when first saved. Theme preferences also accept the legacy key.
 
-**Drill Management**
+## Acknowledgements
 
-  * **Edit & Create:** Modify pre-programmed drills or create custom ones (Groups A, B, C).
-  * **Sharing:** Import/export via CSV or share online specific drills using codes.
-  * **Randomization:** Randomize ball sequences or configure multiple variants of a single ball.
-  * **Scatter:** Randomize drop point (DP) of a single ball. Configured DP +/- scatter value.
-  * **Drag-and-Drop Management:** Easily reorder drill sequences or move drills between categories using drag-and-drop.
-  * **Controls:** Set drill duration (time or repetitions), pause/stop, and countdown timers.
-  * **Tap to skip:** Starting countdown timer can be skipped by tapping on it.<br>
-
-
-**Editor Tools**
-
-  * **Drill Editor:** Long-press drill button to access. Supports deletion, "save as", and testing entire sequences.
-  * **Ball Editor:** Add/remove balls, adjust sequence, rename drills, and test single balls without saving.
-
-## Custom Drills (CSV)
-
-Drills can be imported via CSV. Each category (A, B, C) holds 100 drills; each drill holds 20 balls. Variant balls (pseudo-randomness) share the same ball number.
-
-**CSV Format:** `Set;Ball;Name;Speed;Spin;Type;Height;Drop;BPM;Reps`
-
-**Example:**
-
-```csv
-A;1;Drill A2;7.5;5;top;50;-5;60;1
-A;2;Drill A2;7.5;5;back;50;-5;30;1
-B;1;Drill B1;7.5;5;top;50;-5;60;1
-B;1;Drill B1;7.5;5;back;50;5;60;1
-```
-
-## Technical Parameters
-
-| Parameter | Description | Range | Step |
-| :--- | :--- | :--- | :--- |
-| **Spin type** |top/back | - | - |
-| **Speed** | ball speed | 0 - 10 | 0.5 |
-| **Spin** | ball spin | 0 - 10 | 0.5 |
-| **Height** | Ball height | -50 (down) to 100 (up) | 1 |
-| **Drop** | Drop point | -10 (right) to 10 (left) | 0.5 |
-| **bpm** | balls/minute | 30 - 90 | 1 |
-| **Reps** | Repetitions | 1 - 200 | 1 |
-
-
-## Credits & Support
-
-Additional informations: [Wiki](https://github.com/olanga/nova/wiki/General-information)
-
-Spinsight measurements: [Wiki](https://github.com/olanga/nova/wiki/Spinsight-measurements-with-Nova-S-Pro)
-
-Based on findings by [smee](https://github.com/smee/nova-s-custom-drills) and plunder.
-
-PWA version 2.3a created by [Griizly](https://griizly.github.io/nova/)
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/E1E21PUFEQ)
-
-
+Forked from [olanga/nova](https://github.com/olanga/nova), whose visual styling and drill patterns inspired the original OpenPong interface. Dora support and BLE serialization are independent of the Nova protocol.
