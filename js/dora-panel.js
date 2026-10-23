@@ -166,11 +166,7 @@ export function initDoraPanel(){
  document.querySelector('.settings-card').prepend(selector);
  const panel=document.createElement('section');panel.id='dora-panel';panel.hidden=true;
  panel.innerHTML=`
- <div class="settings-card" style="margin:14px 0">
-  <h2 style="margin:0 0 10px">Dora Drill Control</h2>
-  <small style="color:var(--text-light)">Build: dora-controls-v2 · uses Reps / Time above</small>
-  <p id="dora-status" role="status" aria-live="polite">Connect to Dora to start</p>
- </div>
+ <p id="dora-status" role="status" aria-live="polite" style="margin:8px 0;color:var(--text-light);font-size:0.8rem">Connect to Dora to start</p>
  <div class="section-label">Difficulty Level</div>
  <div id="dora-levels" class="level-select" style="display:flex;gap:12px;justify-content:center;margin:12px"></div>
  <div class="section-label">Drill Selection</div>
