@@ -18,6 +18,7 @@
    <div class="menu-title">Drill</div>
    <div id="dora-export" class="theme-item" role="button" tabindex="0"><span class="color-preview" style="background:var(--text)"></span> Export Drills</div>
    <div id="dora-import" class="theme-item" role="button" tabindex="0"><span class="color-preview" style="background:var(--text)"></span> Import Drills</div>
+   <div class="theme-item" role="button" tabindex="0" onclick="openCalibrationEngine()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCalibrationEngine()}">📐 Calibration Engine</div>
    <div class="theme-item" role="button" tabindex="0" onclick="openPlacementEstimator()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPlacementEstimator()}">🎯 Ball Placement Estimator</div>
    <div id="dora-open-settings" class="theme-item" role="button" tabindex="0" onclick="openDoraSettings()">⚙ Device Settings</div>
    <div style="border-top:1px solid var(--border);margin:8px 0"></div>
@@ -30,6 +31,22 @@
    <div class="theme-item" onclick="resetStats()">Reset Statistics</div>
   </div>
   <input id="dora-import-file" type="file" accept=".json" hidden>
+  <section id="calibration-page" hidden role="dialog" aria-modal="true" aria-labelledby="calibration-title">
+   <div class="settings-card placement-panel">
+    <button id="calibration-close" class="placement-close" type="button" onclick="closeCalibrationEngine()" aria-label="Close calibration engine">×</button>
+    <h2 id="calibration-title">Calibration Engine</h2>
+    <p>No Spin · Difficulty 1. Receiver view: X=0 at leftmost end-line corner; Y increases toward net.</p>
+    <p><strong>Robot location:</strong> Center line (X=6), opponent's end line (Y=22 on the two-half-table coordinate). Fixed assumption for this profile; moving the robot requires recalibration.</p>
+    <p id="calibration-count"></p>
+    <div id="calibration-rows"></div>
+    <div class="calibration-buttons">
+     <button id="calibration-add" type="button">+ Add target</button>
+     <button id="calibration-save" type="button">Save calibration</button>
+     <button id="calibration-reset" type="button">Reset five points</button>
+    </div>
+    <p id="calibration-status" role="status" aria-live="polite">Edit measured values, then save. New rows start with placeholders.</p>
+   </div>
+  </section>
   <section id="placement-estimator-page" hidden role="dialog" aria-modal="true" aria-labelledby="placement-title">
    <div class="settings-card placement-panel">
     <button id="placement-close" class="placement-close" type="button" onclick="closePlacementEstimator()" aria-label="Close estimator">×</button>
@@ -78,6 +95,6 @@
    <div id="stats-display">Balls: 0 | Drills: 0</div>
   </footer>
  </div>
- <script type="module" src="js/main.js?v=dora-clipboard-v1"></script>
+ <script type="module" src="js/main.js?v=calibration-engine-v1"></script>
 </body>
 </html>
