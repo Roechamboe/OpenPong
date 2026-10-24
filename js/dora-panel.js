@@ -49,6 +49,8 @@ function scrollToEditorStep(index){
  const target=$('dora-steps').querySelector('[data-step-index="'+index+'"]');
  if(!scroller||!target)return;
  requestAnimationFrame(()=>{
+  const heading=target.querySelector('.group-title');
+  heading?.focus({preventScroll:true});
   const offset=target.getBoundingClientRect().top-scroller.getBoundingClientRect().top;
   scroller.scrollTo({top:scroller.scrollTop+offset-8,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
  });
@@ -63,7 +65,7 @@ function editor({focusStep=null}={}){
  const steps=draft.levels[level-1];
  $('dora-steps').innerHTML=steps.map((options,i)=>`
  <div class="ball-group" data-step-index="${i}" style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:10px">
-  <div class="group-title" style="display:flex;align-items:center;justify-content:space-between">
+  <div class="group-title" tabindex="-1" style="display:flex;align-items:center;justify-content:space-between">
    <strong>Ball ${i+1}</strong>
    <div style="display:flex;gap:5px">
     <button type="button" data-action="up" data-step="${i}">↑</button>
