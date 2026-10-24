@@ -16,6 +16,12 @@ This standalone fork keeps a **modular robot adapter API** so contributors can a
 
 **Hardware safety:** Session stopping is sent over BLE. Always keep the robot's physical stop accessible, especially while testing unfamiliar shot parameters.
 
+## Preset calibration and limitations
+
+The factory library preserves the 34 drill names and each source drill's sequence from `main`. The **only hardware-tested shot** so far is **forehand push, half-long**: Direction 15, Speed 30, Spin 10, Arc 15, Frequency 35, Spin Angle 180. Dora's backhand placement and the drive/loop variants are provisional estimates derived from the source presets' placement, wheel-speed relationship and relative frequency. **They are not verified equivalents** and should be tested individually. The basic drills reflect their three source difficulty levels; combined and complex drills retain the source level-one ball values at each difficulty.
+
+Upgrades update untouched factory levels while preserving levels previously edited by the user. Back up custom configurations with Export Drills before physical calibration.
+
 ## Dora functions
 
 - Native 15-byte BLE messages over service FFF0, with notifications on FFF1 and writes on FFF2.
