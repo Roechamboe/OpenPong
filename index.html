@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="theme-color" content="#202b34">
  <title>Dora Drill Control · OpenPong</title>
- <link rel="stylesheet" href="css/style.css?v=dora-main-shot-map-v10">
+ <link rel="stylesheet" href="css/style.css?v=dora-emergency-stop-v1">
  <link rel="stylesheet" href="css/placement-estimator.css?v=3">
 </head>
 <body>
@@ -87,11 +87,13 @@
     <div class="control-pill" id="ui-reps"><label for="input-reps">Balls</label><input type="number" id="input-reps" min="1" max="10000" value="10"></div>
     <div class="control-pill hidden" id="ui-time"><label for="input-time">Time (s)</label><input type="number" id="input-time" min="1" max="3600" step="10" value="60"></div>
    </div>
+   <button id="btn-emergency-stop" type="button" aria-label="Stop robot immediately">■ STOP ROBOT</button>
+   <p id="emergency-stop-feedback" role="status" aria-live="assertive"></p>
   </div>
   <footer style="padding:15px 0;text-align:center">
    <div id="stats-display">Balls: 0 | Drills: 0</div>
   </footer>
  </div>
- <script type="module" src="js/main.js?v=tuned-baseline-v10"></script>
+ <script type="module" src="js/main.js?v=dora-emergency-stop-v1"></script>
 </body>
 </html>
