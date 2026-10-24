@@ -4,7 +4,7 @@ import {setMode,resetStats} from './state.js';
 import {setTheme,toggleMenu,updateStatsUI} from './ui.js';
 import {connectDevice,disconnectDevice,bleState} from './bluetooth.js';
 import {onRobotEvent} from './core/robot-manager.js';
-import {initDoraPanel} from './dora-panel.js?v=tuned-baseline-v8';
+import {initDoraPanel} from './dora-panel.js?v=tuned-baseline-v9';
 function updateConnection(){
  const connected=bleState.isConnected;
  document.getElementById('btn-connect').textContent=connected?'Disconnect':'Connect';
