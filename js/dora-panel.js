@@ -1,13 +1,13 @@
 // Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
-import { parseBallVector } from './ball-vector.js?v=3';
+import { parseBallVector } from './ball-vector.js?v=4';
 import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
 const robot=getActiveAdapter();
 import { runMode } from './state.js';
 import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
-  exportDrills, importDrills, newDrill } from './robots/dora/drills.js?v=tuned-baseline-v9';
+  exportDrills, importDrills, newDrill } from './robots/dora/drills.js?v=tuned-baseline-v10';
 
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
 let stopTimer=null, running=false, busy=false, token=0, launches=0;
@@ -86,7 +86,7 @@ function editor({focusStep=null}={}){
       </div>`).join('')}
     </div>
     <div class="card-actions">
-     <button type="button" class="btn-action" data-action="paste-vector" data-step="${i}" data-opt="${j}" title="Paste Dir:Speed:Spin:Freq:Arc:SpinType">📋 Paste parameters</button>
+     <button type="button" class="btn-action" data-action="paste-vector" data-step="${i}" data-opt="${j}" title="Paste Dir:Speed:Spin:Arc:Freq:SpinAngle">📋 Paste parameters</button>
      <button type="button" class="btn-action btn-act-clone" data-action="variant" data-step="${i}">+ Variant</button>
      <button type="button" class="btn-action btn-act-del" data-action="remove-option" data-step="${i}" data-opt="${j}" ${options.length===1?'disabled':''}>Delete</button>
     </div>
