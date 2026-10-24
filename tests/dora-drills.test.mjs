@@ -40,7 +40,7 @@ test('factory migration preserves existing saved Dora drills and custom edits',(
  assert.equal(upgraded.length,35);
  assert.equal(upgraded.find(d=>d.id===old[0].id).levels[0][0][0].speed,72);
  assert.ok(upgraded.some(d=>d.id===custom.id));
- assert.equal(stored.get('openpong_dora_factory_version'),'4');
+ assert.equal(stored.get('openpong_dora_factory_version'),'5');
 });
 
 test('legacy Dora starter drills move to custom library without losing settings',()=>{
@@ -56,7 +56,7 @@ test('legacy Dora starter drills move to custom library without losing settings'
  const preserved=migrated.find(d=>d.id==='center-drive');
  assert.equal(preserved.category,'custom-a');
  assert.equal(preserved.levels[0][0][0].speed,71);
- assert.equal(stored.get('openpong_dora_factory_version'),'4');
+ assert.equal(stored.get('openpong_dora_factory_version'),'5');
 });
 
 test('factory drill names match the main branch preset keys in category order',()=>{
@@ -69,11 +69,47 @@ test('factory drill names match the main branch preset keys in category order',(
   assert.deepEqual(defaults().filter(d=>d.category===cat).map(d=>d.name),expected);
 });
 
-test('physical forehand half-long reference exactly matches drive(f) difficulty 1',()=>{
- const d=defaults().find(d=>d.id==='drive(f)');
+test('physically tested shot anchors push(f), not drive(f)',()=>{
+ const d=defaults().find(d=>d.id==='push(f)');
  assert.deepEqual(d.levels[0][0][0],{
   direction:15,speed:30,spin:10,arc:15,frequencyLevel:35,angle:180
  });
+});
+
+test('shot types derive distinct values from the main preset descriptors',()=>{
+ const get=(name,level=1)=>defaults().find(d=>d.name===name).levels[level-1][0][0];
+ assert.deepEqual(get('push(b)'),{
+  direction:75,speed:30,spin:10,arc:15,frequencyLevel:35,angle:180
+ });
+ assert.deepEqual(get('drive(f)'),{
+  direction:15,speed:38,spin:10,arc:12,frequencyLevel:65,angle:0
+ });
+ assert.deepEqual(get('loop(f)'),{
+  direction:15,speed:34,spin:15,arc:21,frequencyLevel:35,angle:180
+ });
+ assert.equal(get('push(f)',2).spin,15);
+ assert.equal(get('push(f)',3).spin,20);
+ assert.equal(get('push(f)',2).frequencyLevel,45);
+ assert.equal(get('drive(f)',2).frequencyLevel,75);
+ assert.equal(get('drive(f)',3).frequencyLevel,95);
+ assert.equal(get('loop(f)',2).spin,20);
+ assert.equal(get('loop(f)',3).spin,25);
+});
+
+test('combined and complex steps preserve main source order and base shot settings',()=>{
+ const factory=defaults();
+ const get=(name)=>factory.find(d=>d.id===name);
+ const combined=get('push(f)-drive(b)');
+ assert.deepEqual(combined.levels[0].map(step=>step[0]),[
+  get('push(f)').levels[0][0][0],
+  get('drive(b)').levels[0][0][0]
+ ]);
+ for(let i=1;i<3;i++)assert.deepEqual(combined.levels[i],combined.levels[0]);
+ const complex=get('push(b)-loop(f)-drive(b)');
+ for(let i=0;i<3;i++)assert.deepEqual(complex.levels[i],complex.levels[0]);
+ const randomized=get('23-random-drive');
+ assert.equal(randomized.shuffle,true);
+ assert.deepEqual(randomized.levels[0].map(step=>step[0].direction),[15,75,15]);
 });
 test('factory ball profiles stay valid across all three difficulty levels',()=>{
  const ds=defaults();
@@ -95,7 +131,24 @@ test('migration refreshes untouched factory levels while retaining edited levels
  stored.set('openpong_dora_factory_version','3');
  const migrated=loadDrills().find(x=>x.id==='drive(f)');
  assert.equal(migrated.levels[0][0][0].direction,15);
- assert.equal(migrated.levels[0][0][0].speed,30);
+ assert.equal(migrated.levels[0][0][0].speed,38);
  assert.equal(migrated.levels[1][0][0].speed,72);
- assert.equal(stored.get('openpong_dora_factory_version'),'4');
+ assert.equal(stored.get('openpong_dora_factory_version'),'5');
+});
+
+test('v4 untouched factory levels update, but user-edited difficulty survives',()=>{
+ const stored=new Map();
+ globalThis.localStorage={getItem:k=>stored.get(k)||null,setItem:(k,v)=>stored.set(k,v)};
+ // Old level-one forehand push was not calibrated; level two was hand-edited.
+ const original=defaults().find(d=>d.id==='push(f)');
+ original.levels[0]=[[{direction:15,speed:25,spin:8,arc:10,frequencyLevel:35,angle:0}]];
+ original.levels[1]=[[{direction:15,speed:29,spin:11,arc:10,frequencyLevel:45,angle:0}]];
+ original.levels[1][0][0].arc=19;
+ stored.set('openpong_dora_drills_v1',JSON.stringify([original]));
+ stored.set('openpong_dora_factory_version','4');
+ const result=loadDrills().find(d=>d.id==='push(f)');
+ assert.equal(result.levels[0][0][0].speed,30);
+ assert.equal(result.levels[0][0][0].angle,180);
+ assert.equal(result.levels[1][0][0].arc,19);
+ assert.equal(stored.get('openpong_dora_factory_version'),'5');
 });
