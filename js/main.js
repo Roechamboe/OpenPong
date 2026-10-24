@@ -1,5 +1,5 @@
-import {initCalibrationEditor} from './calibration-ui.js?v=1';
-import {initPlacementEstimator} from './placement-estimator.js?v=3';
+import {initCalibrationEditor} from './calibration-ui.js?v=2';
+import {initPlacementEstimator} from './placement-estimator.js?v=4';
 import {setMode,resetStats} from './state.js';
 import {setTheme,toggleMenu,updateStatsUI} from './ui.js';
 import {connectDevice,disconnectDevice,bleState} from './bluetooth.js';
