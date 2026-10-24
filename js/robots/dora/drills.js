@@ -1,3 +1,4 @@
+import {estimatePlacement,DEFAULT_PROFILE} from '../../calibration-engine.js?v=1';
 // Dora-native drill model. Never mix these values with Nova wheel-RPM arrays.
 const KEY = 'openpong_dora_drills_v1';
 export const CATEGORIES = Object.freeze(['basic','combined','complex','custom-a','custom-b','custom-c']);
@@ -9,7 +10,7 @@ function drill(name, steps, category='basic') {
 }
 // Derived from Nova's js/constants.js names and ordered sequences.
 // Dora speed/spin/arc values are approximate starting points, NOT RPM equivalents.
-export const FACTORY_PRESET_VERSION=5;
+export const FACTORY_PRESET_VERSION=6;
 const LEGACY_STARTER_IDS=new Set(['center-drive','left-drive','right-drive','backspin','topspin','left-right','center-left-right','alternating-spin','wide-placement']);
 const LAYOUT={
  basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
@@ -40,8 +41,45 @@ const PUSH_REFERENCE_DIFF=Math.abs(1547-2915);
 // source presets; stroke-specific Dora arcs therefore remain an inference.
 const DORA_ARC={push:15,drive:12,loop:21};
 
+// Six fundamental shots: right-handed receiver forehand is X=9; backhand X=3.
+// All targets lie inside the measured no-spin hull. Profiles are starting hypotheses,
+// NOT physically tested spin corrections. Engine uses fixed seed calibration only:
+// personal calibration saves must not silently rewrite factory defaults.
+export const FUNDAMENTAL_TARGETS=Object.freeze({
+ 'push(b)':{x:3,y:5}, 'push(f)':{x:9,y:5},
+ 'drive(b)':{x:3,y:3},'drive(f)':{x:9,y:3},
+ 'loop(b)':{x:3,y:7}, 'loop(f)':{x:9,y:7}
+});
+const STROKE_ADJUSTMENT=Object.freeze({
+ push:{speed:0,arc:0,spin:10,angle:180},
+ drive:{speed:4,arc:-3,spin:10,angle:0},
+ loop:{speed:2,arc:7,spin:18,angle:0}
+});
+export function fundamentalShot(symbol,difficulty=1){
+ const match=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
+ if(!match)throw new Error('Unknown factory shot '+symbol);
+ if(!Number.isInteger(difficulty)||difficulty<1||difficulty>3)throw new RangeError('Invalid difficulty');
+ const target=FUNDAMENTAL_TARGETS[symbol],base=estimatePlacement(target.x,target.y,DEFAULT_PROFILE);
+ if(!base.valid)throw new Error('Factory target outside measured calibration hull: '+symbol);
+ const type=match[1],adj=STROKE_ADJUSTMENT[type];
+ // Level two/three are provisional training progressions, not calibration layers.
+ const difficultySpeed=[0,3,6][difficulty-1];
+ const difficultySpin=[0,3,6][difficulty-1];
+ const frequencies={push:[35,45,55],drive:[65,75,95],loop:[35,45,55]};
+ return ball({
+  direction:Math.max(0,Math.min(90,Math.round(base.direction))),
+  speed:Math.max(20,Math.min(100,Math.round(base.speed+adj.speed+difficultySpeed))),
+  spin:Math.min(60,adj.spin+difficultySpin),
+  arc:Math.max(-65,Math.min(65,Math.round(base.arc+adj.arc))),
+  frequencyLevel:frequencies[type][difficulty-1],
+  angle:adj.angle
+ });
+}
+const shot=fundamentalShot;
+
+// Version-5 factory snapshot for migration; user-edited values must be retained.
 /** Estimate one Dora-native ball from a source preset's individual shot. */
-function shot(symbol,difficulty=1){
+function v5Shot(symbol,difficulty=1){
  const match=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
  if(!match)throw new Error('Unknown factory preset token '+symbol);
  const [,type,side]=match;
@@ -143,8 +181,8 @@ export function loadDrills() {
           if(!saved)return d;
           // Preserve any user-modified difficulty level. Only exact untouched
           // legacy factory levels (v3 and v4) are eligible for replacement.
-          const unchanged=v=>[1,2,3].map(i=>segments(d.name).map(s=>[v(s,i)]));
-          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot)];
+          const unchanged=v=>[1,2,3].map(i=>segments(d.name).map(s=>[v(s,d.category==='basic'?i:1)]));
+          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot),unchanged(v5Shot)];
           const levels=d.levels.map((fresh,i)=>
             oldVersions.some(version=>
               JSON.stringify(saved.levels?.[i])===JSON.stringify(version[i]))
