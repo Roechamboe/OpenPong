@@ -1,9 +1,9 @@
-import {initPlacementEstimator} from './placement-estimator.js?v=1';
+import {initPlacementEstimator} from './placement-estimator.js?v=2';
 import {setMode,resetStats} from './state.js';
 import {setTheme,toggleMenu,updateStatsUI} from './ui.js';
 import {connectDevice,disconnectDevice,bleState} from './bluetooth.js';
 import {onRobotEvent} from './core/robot-manager.js';
-import {initDoraPanel} from './dora-panel.js?v=dora-main-shot-map-v10';
+import {initDoraPanel} from './dora-panel.js?v=dora-clipboard-v1';
 function updateConnection(){
  const connected=bleState.isConnected;
  document.getElementById('btn-connect').textContent=connected?'Disconnect':'Connect';
