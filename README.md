@@ -40,7 +40,7 @@ From the top-right menu, choose **Ball Placement Estimator** (immediately above 
 
 ### Measured calibration procedure
 
-We divided the receiver's table half into **12 equal intervals across (grid lines X = 0–12)** and **11 intervals along its length (grid lines Y = 0–11)**. There are 13 × 12 grid intersections, not 12 × 11 points. The origin **(0,0) is the receiver's forehand corner from the robot's perspective**. X increases toward the receiver's backhand; Y increases from receiver end line toward net. We placed a Post-it note at each target and adjusted the robot's Direction, Speed and Arc until multiple shots out of ten hit each note. Actual hit counts were not recorded.
+We divided the receiver's table half into **12 equal intervals across (grid lines X = 0–12)** and **11 intervals along its length (grid lines Y = 0–11)**. There are 13 × 12 grid intersections, not 12 × 11 points. The origin **(0,0) is the receiver's backhand corner from the robot's perspective**. X increases toward the receiver's forehand; Y increases from receiver end line toward net. We placed a Post-it note at each target and adjusted the robot's Direction, Speed and Arc until multiple shots out of ten hit each note. Actual hit counts were not recorded.
 
 ![Five numbered Post-it calibration targets, gridded receiver half, and quadrilateral interpolation region](images/placement-calibration-grid.svg)
 
@@ -89,6 +89,19 @@ Outside this region it displays no prediction, rather than extrapolating. Slider
 ### Validation and safety
 
 Next, compare predicted and observed landings at additional positions (e.g. (3,5), (9,5), (6,7)), recording hit counts out of ten and actual landing coordinates; use those measurements to improve the two-dimensional direction model and arc handling. Keep the robot height, position and orientation fixed between tests. Use the robot's physical stop while testing unfamiliar parameters.
+
+### Ball parameter clipboard format
+
+The estimator's **Copy proposed settings** exports the six-field, colon-delimited Dora vector:
+
+```text
+Dir:Speed:Spin:Freq:Arc:SpinType
+40:39:0:35:15:180
+```
+
+The estimator rounds predicted Direction and Speed to integers, sets **Spin = 0** (no spin), **Freq = 35** (provisional firing frequency), and **SpinType = 180** (Dora editor's native spin-angle field, not a separate spin mode). Those latter defaults have *not* been established by these placement measurements. In the drill editor, each ball variant has a **Paste parameters** control that reads the clipboard, validates all six values, and updates only that ball variant. Valid values are integer Direction 0–90, Speed 20–100, Spin 0–60, Freq 20–170, Arc -65–65, and SpinType/angle 0–359. Invalid vectors leave the ball unchanged. Save the drill to persist an imported vector. Clipboard access requires a supported browser and secure origin (HTTPS/localhost).
+
+The X-axis is drawn increasing **right-to-left** on the receiver table view, so **(0,0) is the receiver's backhand corner**. This correction changes display orientation, not the original calibration coordinates or fitted equations.
 
 ## Extending the robot abstraction
 
