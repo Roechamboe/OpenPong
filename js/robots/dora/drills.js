@@ -10,7 +10,7 @@ function drill(name, steps, category='basic') {
 }
 // Derived from Nova's js/constants.js names and ordered sequences.
 // Dora speed/spin/arc values are approximate starting points, NOT RPM equivalents.
-export const FACTORY_PRESET_VERSION=6;
+export const FACTORY_PRESET_VERSION=7;
 const LEGACY_STARTER_IDS=new Set(['center-drive','left-drive','right-drive','backspin','topspin','left-right','center-left-right','alternating-spin','wide-placement']);
 const LAYOUT={
  basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
@@ -51,11 +51,11 @@ export const FUNDAMENTAL_TARGETS=Object.freeze({
  'loop(b)':{x:3,y:7}, 'loop(f)':{x:9,y:7}
 });
 const STROKE_ADJUSTMENT=Object.freeze({
- push:{speed:0,arc:0,spin:10,angle:180},
+ push:{speed:-3,arc:0,spin:10,angle:180},
  drive:{speed:4,arc:-3,spin:10,angle:0},
  loop:{speed:2,arc:7,spin:18,angle:0}
 });
-export function fundamentalShot(symbol,difficulty=1){
+function generateFundamentalShot(symbol,difficulty=1,pushSpeedOffset=-3){
  const match=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
  if(!match)throw new Error('Unknown factory shot '+symbol);
  if(!Number.isInteger(difficulty)||difficulty<1||difficulty>3)throw new RangeError('Invalid difficulty');
@@ -68,13 +68,16 @@ export function fundamentalShot(symbol,difficulty=1){
  const frequencies={push:[35,45,55],drive:[65,75,95],loop:[35,45,55]};
  return ball({
   direction:Math.max(0,Math.min(90,Math.round(base.direction))),
-  speed:Math.max(20,Math.min(100,Math.round(base.speed+adj.speed+difficultySpeed))),
+  speed:Math.max(20,Math.min(100,Math.round(base.speed+adj.speed+difficultySpeed+(type==='push'?pushSpeedOffset+3:0)))),
   spin:Math.min(60,adj.spin+difficultySpin),
   arc:Math.max(-65,Math.min(65,Math.round(base.arc+adj.arc))),
   frequencyLevel:frequencies[type][difficulty-1],
   angle:adj.angle
  });
 }
+export const fundamentalShot=(symbol,difficulty=1)=>generateFundamentalShot(symbol,difficulty,-3);
+// v6 snapshot matches the factory data issued before the push-speed test.
+const v6Shot=(symbol,difficulty=1)=>generateFundamentalShot(symbol,difficulty,0);
 const shot=fundamentalShot;
 
 // Version-5 factory snapshot for migration; user-edited values must be retained.
@@ -182,7 +185,7 @@ export function loadDrills() {
           // Preserve any user-modified difficulty level. Only exact untouched
           // legacy factory levels (v3 and v4) are eligible for replacement.
           const unchanged=v=>[1,2,3].map(i=>segments(d.name).map(s=>[v(s,d.category==='basic'?i:1)]));
-          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot),unchanged(v5Shot)];
+          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot),unchanged(v5Shot),unchanged(v6Shot)];
           const levels=d.levels.map((fresh,i)=>
             oldVersions.some(version=>
               JSON.stringify(saved.levels?.[i])===JSON.stringify(version[i]))
