@@ -18,7 +18,7 @@ export function initPlacementEstimator(){
  x.addEventListener('input',render);y.addEventListener('input',render);
  copy.addEventListener('click',async()=>{
   const p=estimatePlacement(+x.value,+y.value);if(!p.valid)return;
-  const value=[Math.round(p.direction),Math.round(p.speed),0,35,p.arc,180].join(':');
+  const value=[Math.round(p.direction),Math.round(p.speed),0,p.arc,35,180].join(':');
   try{await navigator.clipboard.writeText(value);status.textContent='Settings copied. Verify on the table.';}
   catch{status.textContent='Clipboard unavailable; use the displayed values.';}
  });
