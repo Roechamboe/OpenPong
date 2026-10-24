@@ -1086,3 +1086,75 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 #dora-device-settings-card {position:relative;}
 .dora-settings-close {position:absolute;right:15px;top:12px;background:transparent;border:0;color:var(--text-light);font-size:1.65rem;line-height:1;padding:5px 8px;cursor:pointer;border-radius:8px;}
 .dora-settings-close:hover,.dora-settings-close:focus-visible {color:var(--primary);background:var(--primary-dim);}
+
+/* Dora editor: same contained, scrollable dialog pattern as the main editor. */
+#dora-editor.modal-overlay { padding: 12px; }
+#dora-editor > .modal {
+  width: min(95vw, 450px);
+  max-width: 450px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  min-height: 0;
+}
+#dora-editor .modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+#dora-editor .dora-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+#dora-editor .modal-title { margin: 0; font-weight: 700; }
+#dora-editor .modal-close {
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 2px 7px;
+  color: var(--text-light);
+  cursor: pointer;
+}
+#dora-editor .modal-close:hover,
+#dora-editor .modal-close:focus-visible {
+  background: var(--primary-dim);
+  color: var(--primary);
+}
+#dora-editor .dora-editor-name-label { display: block; font-size: .8rem; }
+#dora-editor .dora-editor-name-label input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+#dora-editor .dora-editor-shuffle { font-size: .8rem; }
+#dora-editor .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+#dora-editor .dora-editor-tip {
+  font-size: .75rem;
+  color: var(--text-light);
+  margin: 0 0 12px;
+}
+#dora-editor .modal-footer { flex: 0 0 auto; }
+#dora-editor .modal-footer .btn-modal { flex: 1 1 0; min-width: 0; }
+#dora-editor .group-title button:not(.btn-add-opt) {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+}
+#dora-editor .group-title button:active { transform: scale(.96); }
