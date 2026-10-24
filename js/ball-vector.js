@@ -1,6 +1,6 @@
-// Dora editor clipboard vector: Dir:Speed:Spin:Freq:Arc:SpinType.
-// SpinType is the existing spin orientation / angle field (0..359).
-const VECTOR_FIELDS=[['direction',0,90],['speed',20,100],['spin',0,60],['frequencyLevel',20,170],['arc',-65,65],['angle',0,359]];
+// Dora editor clipboard vector: Dir:Speed:Spin:Arc:Freq:SpinAngle.
+// SpinAngle is the existing spin orientation / angle field (0..359).
+const VECTOR_FIELDS=[['direction',0,90],['speed',20,100],['spin',0,60],['arc',-65,65],['frequencyLevel',20,170],['angle',0,359]];
 export function parseBallVector(value){
  const parts=String(value).trim().split(':');
  if(parts.length!==6)throw new Error('Expected six values: Dir:Speed:Spin:Freq:Arc:SpinType');
