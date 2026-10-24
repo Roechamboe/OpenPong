@@ -1,5 +1,6 @@
 // Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
+import { parseBallVector } from './ball-vector.js?v=1';
 import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
@@ -85,6 +86,7 @@ function editor({focusStep=null}={}){
       </div>`).join('')}
     </div>
     <div class="card-actions">
+     <button type="button" class="btn-action" data-action="paste-vector" data-step="${i}" data-opt="${j}" title="Paste Dir:Speed:Spin:Freq:Arc:SpinType">📋 Paste parameters</button>
      <button type="button" class="btn-action btn-act-clone" data-action="variant" data-step="${i}">+ Variant</button>
      <button type="button" class="btn-action btn-act-del" data-action="remove-option" data-step="${i}" data-opt="${j}" ${options.length===1?'disabled':''}>Delete</button>
     </div>
@@ -380,6 +382,19 @@ export function initDoraPanel(){
   const btn=e.target.closest('[data-action]');if(!btn)return;
   const i=Number(btn.dataset.step),j=Number(btn.dataset.opt),steps=draft.levels[level-1];
   let focusStep=null;
+  if(btn.dataset.action==='paste-vector'){
+   (async()=>{
+    try{
+     const text=await navigator.clipboard.readText();
+     const parsed=parseBallVector(text);
+     Object.assign(steps[i][j],parsed);
+     editor();
+     const group=$('dora-steps').querySelector('[data-step-index="'+i+'"]');
+     group?.querySelector('[data-action="paste-vector"][data-opt="'+j+'"]')?.focus({preventScroll:true});
+    }catch(error){alert('Cannot paste ball parameters: '+error.message);}
+   })();
+   return;
+  }
   switch(btn.dataset.action){
    case 'up':if(i>0){[steps[i-1],steps[i]]=[steps[i],steps[i-1]];focusStep=i-1;}break;
    case 'down':if(i<steps.length-1){[steps[i+1],steps[i]]=[steps[i],steps[i+1]];focusStep=i+1;}break;
