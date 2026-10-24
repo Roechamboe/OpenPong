@@ -6,7 +6,7 @@ import { updateStatsUI } from './ui.js';
 const robot=getActiveAdapter();
 import { runMode } from './state.js';
 import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
-  exportDrills, importDrills, newDrill } from './robots/dora/drills.js';
+  exportDrills, importDrills, newDrill } from './robots/dora/drills.js?v=dora-source-calibration-v5';
 
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
 let stopTimer=null, running=false, busy=false, token=0, launches=0;
