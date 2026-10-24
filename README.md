@@ -34,22 +34,80 @@ Upgrades update untouched factory levels while preserving levels previously edit
 
 **Not yet validated:** All drill presets, multi-ball operation, and volume/brightness commands require further physical testing. Pause/resume is not supported.
 
-## Modular calibration engine
+## Calibration Engine — setup and workflow
 
-Open **☰ → Calibration Engine**, above **Ball Placement Estimator**. The calibration editor uses the same shared receiver-view table visualization as the placement estimator. Tap a numbered marker to edit that point's X, Y, Direction, Speed, and Arc; tap an empty grid intersection to add a new point using provisional nearest-point parameters. Unsaved changes remain in a draft until **Save calibration**. You can remove, edit, and add targets to expand from five to nine or more, then **Save calibration**. All changes are local to the browser (`openpong_placement_calibration_v1`); existing drills are not modified. New targets carry *placeholder* robot values, so physically measure and replace them before saving. Reset restores the original five observed points. There must be at least 3 non-collinear points for predictions.
+The **Calibration Engine** converts physical ball-placement measurements into a reusable placement model. It is accessible through the top-right **☰ → Calibration Engine**, immediately above **Ball Placement Estimator**. Both screens use the same receiver-perspective table map.
 
-**Machine placement assumption:** robot centered on the center line at the *opponent's end line*, represented by **X=6, Y=22** if the receiver's end line is Y=0, receiver's net is Y=11, and the opponent end line is Y=22. The machine location is stored as profile metadata, not inferred from ball flight. This first version does **not** automatically compensate for moving or rotating the robot; measurements must be taken again if its position changes.
+### 1. Set up the table and robot
 
-`js/calibration-engine.js` exports `DEFAULT_PROFILE`, `validateProfile`, `loadCalibration`, `saveCalibration`, and `estimatePlacement(x,y,profile)`. Measurements are assembled into non-overlapping local triangles using an empty-circumcircle (Delaunay) criterion. Inside a containing triangle, Direction and Speed are **barycentrically interpolated**:
+- Use **No Spin**, **Difficulty Level 1**, and consistent launch conditions while collecting measurements.
+- From the **receiver's viewpoint**, the grid origin **(0,0)** is the *leftmost corner of the receiver's end line*. X increases left-to-right from 0 to 12 and Y increases toward the net from 0 to 11. These are grid-line coordinates: 12 horizontal intervals and 11 depth intervals, with 13 × 12 possible intersections.
+- Place the Dora robot on the table center line at the **opponent's end line**: X=6, Y=22 in a full-table coordinate system where the receiver's end line is Y=0 and the net is Y=11. Keep robot alignment, height and placement unchanged throughout calibration. This location is **fixed profile metadata**, not a physical aiming correction: moving the robot requires re-measurement.
+- Mark each target intersection with a small Post-it note, then adjust **Direction, Speed and Arc** on the robot until repeated launches reach the target. Record the settings and, ideally, hits out of ten and landing scatter externally; the current editor stores only coordinates and three settings, not hit counts.
+
+![Original five physically measured targets on the grid](images/placement-calibration-grid.svg)
+
+### 2. Select, add, and edit points using the map
+
+1. Open **☰ → Calibration Engine**. The map shows **numbered gold circles** for calibration targets and a **red highlight** for the selected point. A lightly shaded/dashed boundary represents the extent of the measured positions (convex hull).
+2. **Tap a numbered circle** to select a saved or currently edited target. Its X, Y, Direction, Speed and Arc fields appear beneath the map.
+3. To add a position, **tap an empty grid intersection** or choose **+ Add target**. The new point becomes selected. The Add button proposes an unused position, prioritizing (3,5), (9,5), (6,3), and (6,7).
+4. **Replace the provisional parameter values with physically measured settings.** A newly tapped point initially inherits a nearby point's settings; the Add button initially uses Direction 42, Speed 38 and Arc 15. Both are placeholders, **not calibration results**.
+5. Edit the selected fields. Changes are staged locally and the page displays **Unsaved changes**. You can select another marker without losing those staged edits.
+6. Choose **Save calibration** to validate and persist all points and immediately refresh the placement estimator. **Delete selected point** removes a point from the draft; **Reset five points** restores the original measurements in the draft, and must also be saved to apply. Closing and reopening without saving discards staged changes.
+
+The editor accepts unique integer X (0–12), Y (0–11), Direction (0–90), Speed (20–100) and Arc (-65–65), between **3 and 100 calibration targets**. At least three must be non-collinear for interpolated predictions. Invalid coordinates or duplicate positions are rejected on editing/saving. Calibration storage is browser-local under `openpong_placement_calibration_v1`; it is **separate from drill storage**, and the standard Export Drills function does not export it. Back up calibration values independently before changing browsers or clearing site data.
+
+### 3. Expand from five to nine measured targets
+
+The original five target measurements are preserved as the initial profile:
+
+| Target | X | Y | Direction | Speed | Arc |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 1 | 1 | 80 | 48 | 15 |
+| 2 | 11 | 1 | 0 | 50 | 15 |
+| 3 | 3 | 9 | 81 | 29 | 20 |
+| 4 | 9 | 9 | 0 | 28 | 40 |
+| 5 | 6 | 5 | 42 | 38 | 15 |
+
+For a nine-point session, suggested additional targets are **(3,5), (9,5), (6,3), and (6,7)**. For each one: position the Post-it, find repeatable settings on the physical robot, add/select that grid location in the Calibration Engine, enter the actual Direction/Speed/Arc values, and save. Do not leave provisional defaults in the profile as if they were observations.
+
+### 4. Estimate and transfer a ball into a drill
+
+1. Open **☰ → Ball Placement Estimator**. The map uses the **saved** calibration profile, including any additional targets. Adjust the integer X and Y sliders.
+2. At a measured point, the estimator returns its exact recorded settings. Between points, it calculates a prediction **only inside the measured convex hull**; outside it, it shows no values. Arc is selected from the nearest recorded point and remains experimental.
+3. Choose **Copy proposed settings** to copy a six-part colon-separated vector:
+   ```text
+   Dir:Speed:Spin:Freq:Arc:SpinType
+   40:39:0:35:15:180
+   ```
+   The numeric line is illustrative. Direction/Speed are rounded to integers; Spin=0, Freq=35, SpinType/angle=180 are provisional defaults, not additional placement calibrations.
+4. Open the desired drill's ball editor and choose **Paste parameters** on the specific ball variant. The clipboard vector is validated and applied to that variant only; malformed vectors do not change its parameters. Press the drill editor's **Save** button to persist the changes. Neither the Calibration Engine nor the Placement Estimator automatically sends robot commands.
+5. Verify predicted shots on the physical table before using them in training. Keep the robot's physical stop accessible.
+
+### 5. How the data-driven model works
+
+`js/calibration-engine.js` exports `DEFAULT_PROFILE`, `validateProfile`, `loadCalibration`, `saveCalibration`, and `estimatePlacement(x,y,profile)`. `js/placement-map.js` draws the shared grid, selected marker, numbered measurement points and convex-hull overlay. `js/calibration-ui.js` manages the editable draft and save workflow; `js/placement-estimator.js` reads saved measurements and produces clipboard vectors.
+
+The engine uses locally selected triangles meeting an **empty-circumcircle (Delaunay) criterion**. For a target P inside a containing triangle with vertices P₁, P₂, P₃, barycentric weights sum to one:
 
 ```text
-P = w1 P1 + w2 P2 + w3 P3
+P = w1 * P1 + w2 * P2 + w3 * P3
 w1 + w2 + w3 = 1
-Direction(P) = w1 D1 + w2 D2 + w3 D3
-Speed(P) = w1 S1 + w2 S2 + w3 S3
+Direction(P) = w1 * Direction1 + w2 * Direction2 + w3 * Direction3
+Speed(P) = w1 * Speed1 + w2 * Speed2 + w3 * Speed3
+Arc(P) = Arc of nearest measured calibration point
 ```
 
-Known targets reproduce their exact measurements. Predictions are restricted to the convex hull of the measurements; no extrapolation outside the hull. Arc still uses the nearest measured target, since a smoothly interpolated arc has not been physically validated. Nine-point calibration means adding four new measured targets; no equation edits are required. Both screens share `js/placement-map.js` for the receiver-perspective grid, convex-hull overlay, and measured-point markers.
+Exact recorded positions reproduce their measured values; the model does not extrapolate outside the convex hull. The triangle/arc approximations are **experimental** and can be refined as more physical evidence is collected; extra points do not guarantee improved landing accuracy without validation. The robot's stored (6,22) position is a calibration-condition assumption rather than a variable in the interpolation equations.
+
+### Practical cautions and troubleshooting
+
+- **No prediction appears:** the target may be outside the measured convex hull, or the profile may lack a usable triangle. Add real measurements around that area rather than extrapolating.
+- **New targets give implausible predictions:** confirm all newly added rows contain *measured*, not placeholder, settings. Check X/Y orientation and unchanged robot placement.
+- **Clipboard paste fails:** use HTTPS or localhost with a browser supporting clipboard reads/writes, check the six colon-separated integers and their permitted parameter ranges, and use the ball variant's **Paste parameters** control.
+- **Measurements vanish in another browser/device:** calibration uses local storage and does not sync. Record or back it up separately.
+- **Saved drill does not change:** saving calibration updates the estimator, **not existing drills**. Copy from the estimator, paste into the desired ball variant, then Save the drill.
 
 ## Experimental ball placement estimator
 
