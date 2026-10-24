@@ -34,9 +34,26 @@ Upgrades update untouched factory levels while preserving levels previously edit
 
 **Not yet validated:** All drill presets, multi-ball operation, and volume/brightness commands require further physical testing. Pause/resume is not supported.
 
+## Modular calibration engine
+
+Open **☰ → Calibration Engine**, above **Ball Placement Estimator**. The calibration editor displays saved grid target measurements; you can edit, remove, and add targets to expand from five to nine or more, then **Save calibration**. All changes are local to the browser (`openpong_placement_calibration_v1`); existing drills are not modified. New rows carry *placeholder* robot values, so physically measure and replace them before saving. Reset restores the original five observed points. There must be at least 3 non-collinear points for predictions.
+
+**Machine placement assumption:** robot centered on the center line at the *opponent's end line*, represented by **X=6, Y=22** if the receiver's end line is Y=0, receiver's net is Y=11, and the opponent end line is Y=22. The machine location is stored as profile metadata, not inferred from ball flight. This first version does **not** automatically compensate for moving or rotating the robot; measurements must be taken again if its position changes.
+
+`js/calibration-engine.js` exports `DEFAULT_PROFILE`, `validateProfile`, `loadCalibration`, `saveCalibration`, and `estimatePlacement(x,y,profile)`. Measurements are assembled into non-overlapping local triangles using an empty-circumcircle (Delaunay) criterion. Inside a containing triangle, Direction and Speed are **barycentrically interpolated**:
+
+```text
+P = w1 P1 + w2 P2 + w3 P3
+w1 + w2 + w3 = 1
+Direction(P) = w1 D1 + w2 D2 + w3 D3
+Speed(P) = w1 S1 + w2 S2 + w3 S3
+```
+
+Known targets reproduce their exact measurements. Predictions are restricted to the convex hull of the measurements; no extrapolation outside the hull. Arc still uses the nearest measured target, since a smoothly interpolated arc has not been physically validated. Nine-point calibration means adding four new measured targets; no equation edits are required.
+
 ## Experimental ball placement estimator
 
-From the top-right menu, choose **Ball Placement Estimator** (immediately above **Device Settings**). This is a reference calculator: it **does not send BLE commands, update drills or apply settings**. Its assumptions are **No Spin** and **Difficulty Level 1**.
+From the top-right menu, choose **Ball Placement Estimator** (between **Calibration Engine** and **Device Settings**). This is a reference calculator: it **does not send BLE commands, update drills or apply settings**. Its assumptions are **No Spin** and **Difficulty Level 1**.
 
 ### Measured calibration procedure
 
@@ -54,7 +71,7 @@ We divided the receiver's table half into **12 equal intervals across (grid line
 
 ![Observed speed versus landing-depth grid coordinate with first-pass linear trend](images/placement-speed-depth.svg)
 
-### Deriving the first-pass estimator (v0.1)
+### Historical first-pass estimator (v0.1, superseded by triangulation)
 
 At depth Y = 1, the two measured direction settings imply **D = 88 − 8X**. At depth Y = 9, they imply **D = 121.5 − 13.5X**. Linear interpolation between these *two calibrated endpoints at each depth* uses:
 
@@ -78,7 +95,7 @@ It predicts speed 49 at Y=1, 38.75 at Y=5, and 28.5 at Y=9; the observed speed p
 
 **Arc is not modeled continuously:** the UI selects the arc value from the geographically closest of the five calibrated points, measured in squared grid-distance. In particular, at Y=9 the observed arcs differ substantially (20 at X=3 versus 40 at X=9). Using nearest-neighbor arc is only a provisional starting strategy.
 
-The UI predicts only within the quadrilateral connecting (1,1), (11,1), (9,9), (3,9):
+The historical v0.1 UI predicted only within the quadrilateral connecting (1,1), (11,1), (9,9), (3,9):
 
 ```text
 1 <= Y <= 9,  leftX <= X <= rightX
