@@ -1,6 +1,6 @@
 // Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
-import { parseBallVector } from './ball-vector.js?v=1';
+import { parseBallVector } from './ball-vector.js?v=2';
 import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
