@@ -22,24 +22,26 @@ The factory library preserves the 34 drill names and each source drill's sequenc
 
 Upgrades update untouched factory levels while preserving levels previously edited by the user. Back up custom configurations with Export Drills before physical calibration.
 
-### Calibration-derived six fundamental factory shots (v6)
+### Calibration-derived six fundamental factory shots (v7)
 
 The six basic building blocks for Basic, Combined and Complex drills now have explicit **landing targets**, resolved against the five-point **factory no-spin calibration** (`DEFAULT_PROFILE`). The following coordinates use the receiver's left-to-right X axis and assume a **right-handed receiver** for the forehand/backhand names:
 
 | Fundamental shot | Target (X,Y) | Spin type | Baseline modification |
 | --- | --- | --- | --- |
-| Backhand push | (3,5) | Backspin (angle 180) | Spin 10; no speed/arc offset |
-| Forehand push | (9,5) | Backspin (angle 180) | Spin 10; no speed/arc offset |
+| Backhand push | (3,5) | Backspin (angle 180) | Spin 10; speed −3, no arc offset |
+| Forehand push | (9,5) | Backspin (angle 180) | Spin 10; speed −3, no arc offset |
 | Backhand drive | (3,3) | Topspin (angle 0) | Spin 10; speed +4, arc -3 |
 | Forehand drive | (9,3) | Topspin (angle 0) | Spin 10; speed +4, arc -3 |
 | Backhand loop | (3,7) | Topspin (angle 0) | Spin 18; speed +2, arc +7 |
 | Forehand loop | (9,7) | Topspin (angle 0) | Spin 18; speed +2, arc +7 |
 
+**Push refinement:** Physical tests confirmed appropriate backspin but excessive pace and half-long-to-long travel without a second bounce. Version 7 reduces the push Speed parameter by **3** for both backhand and forehand at every difficulty level and for push steps in combined/complex drills, with spin, arc, direction, and frequency unchanged. Drive and Loop remain identical to v6. This is an unverified controlled speed experiment; no claim is made that the new push will bounce twice. The prior v6 push is retained as an exact migration snapshot for preserving manually edited drills.
+
 Direction is the measured-profile interpolation at the chosen target; Speed and Arc start from that location's interpolation and nearest measured arc, plus the shot-style offsets above. Parameters are rounded to valid robot integers. The three Basic difficulty levels add speed offsets 0/+3/+6 and spin offsets 0/+3/+6, with preserved shot-category frequency progressions. Combined and Complex patterns retain level-one shot definitions, consistent with the source.
 
 **Important:** The original five landing measurements used *no spin*. These spin types, magnitudes, speed/arc corrections, and the resulting landing locations **are provisional starting presets**, not experimentally validated spin trajectories. Particularly, the old separately documented half-long forehand push (15/30/10/15/35/180) is a distinct hardware-tested anchor and does not establish that the new forehand push preset will hit (9,5). Verify each shot with physical launches and adjust as needed.
 
-Factory preset version 6 refreshes only *recognized untouched legacy factory configurations*; manually edited presets remain intact. Factory generation deliberately uses the bundled five-point measurements, not browser-local user calibrations, so editing the Calibration Engine does **not** automatically rewrite saved factory drills. Use the estimator clipboard workflow to apply custom measured settings to specific drill balls.
+Factory preset version 7 refreshes only *recognized untouched legacy factory configurations*; manually edited presets remain intact. Factory generation deliberately uses the bundled five-point measurements, not browser-local user calibrations, so editing the Calibration Engine does **not** automatically rewrite saved factory drills. Use the estimator clipboard workflow to apply custom measured settings to specific drill balls.
 
 ## Dora functions
 
