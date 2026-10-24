@@ -10,7 +10,7 @@ import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
   exportDrills, importDrills, newDrill } from './robots/dora/drills.js?v=tuned-baseline-v10';
 
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
-let stopTimer=null, running=false, busy=false, token=0, launches=0;
+let stopTimer=null, running=false, busy=false, token=0, launches=0, stopping=false;
 let holdTimer=null, holdStart=null, suppressRunClick=false;
 let gripDrag=null;
 let activeMode='time', activeTarget=0;
@@ -139,9 +139,22 @@ function modifyEditor(event){
 }
 async function stop(){
  token++;clearTimeout(stopTimer);stopTimer=null;running=false;
- if(!robot.bleState.isConnected){status('Disconnected. Verify physical stop.');return;}
- try{await robot.stopTraining();status('Stopped');}
- catch(e){status('STOP FAILED: '+e.message);}
+ const feedback=$('emergency-stop-feedback');
+ if(!robot.bleState.isConnected){
+  if(feedback)feedback.textContent='Not connected — use physical robot stop.';
+  status('Disconnected. Verify physical stop.');return;
+ }
+ if(stopping)return;
+ stopping=true;
+ if(feedback)feedback.textContent='Sending stop…';
+ try{
+  await robot.stopTraining();
+  if(feedback)feedback.textContent='Stop sent. Confirm robot has stopped.';
+  status('Stopped');
+ }catch(e){
+  if(feedback)feedback.textContent='STOP FAILED — use physical stop!';
+  status('STOP FAILED: '+e.message);
+ }finally{stopping=false;}
 }
 async function startDrill(id){
  if(busy||running)return;
@@ -181,6 +194,7 @@ function download(text,name){
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 export function initDoraPanel(){
+ $('btn-emergency-stop')?.addEventListener('click',()=>{void stop();});
  if (!document.getElementById('dora-hidden-style')) {
   const style=document.createElement('style');style.id='dora-hidden-style';
   style.textContent=`
@@ -427,7 +441,7 @@ export function initDoraPanel(){
    if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
-  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;status('Disconnected — verify robot has stopped');}
+  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;const feedback=$('emergency-stop-feedback');if(feedback)feedback.textContent='Connection lost — use physical stop if robot continues.';status('Disconnected — verify robot has stopped');}
  });
  renderCards();refresh();
 }
