@@ -99,10 +99,10 @@ test('shot types derive distinct values from the main preset descriptors',()=>{
 test('combined and complex steps preserve main source order and base shot settings',()=>{
  const factory=defaults();
  const get=(name)=>factory.find(d=>d.id===name);
- const combined=get('push(f)-drive(b)');
+ const combined=get('push(f)-drive(f)');
  assert.deepEqual(combined.levels[0].map(step=>step[0]),[
   get('push(f)').levels[0][0][0],
-  get('drive(b)').levels[0][0][0]
+  get('drive(f)').levels[0][0][0]
  ]);
  for(let i=1;i<3;i++)assert.deepEqual(combined.levels[i],combined.levels[0]);
  const complex=get('push(b)-loop(f)-drive(b)');
