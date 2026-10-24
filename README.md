@@ -16,7 +16,7 @@ This standalone fork keeps a **modular robot adapter API** so contributors can a
 
 **Hardware safety:** Session stopping is sent over BLE. Always keep the robot's physical stop accessible, especially while testing unfamiliar shot parameters.
 
-## Fundamental shot baseline (factory v8)
+## Fundamental shot baseline (factory v9)
 
 The factory drills use **six fundamental Dora-native shots**. Four are now based on your physically tuned settings; **Drive remains unchanged from v7** because it was reported to land comfortably on the table and feel appropriate, though somewhat challenging for Level 1.
 
@@ -24,20 +24,20 @@ The vector order is exactly **Dir:Speed:Spin:Freq:Arc:SpinType**. Frequency and 
 
 | Shot | Level 1 parameter vector | Status |
 | --- | --- | --- |
-| Forehand Push | `11:28:10:15:35:180` | Hardware-tuned baseline |
-| Backhand Push | `71:28:10:15:35:180` | Hardware-tuned baseline |
+| Forehand Push | `11:28:10:35:15:180` | Hardware-tuned baseline |
+| Backhand Push | `71:28:10:35:15:180` | Hardware-tuned baseline |
 | Forehand Drive | Existing v7 settings, unchanged | Provisional; physically acceptable |
 | Backhand Drive | Existing v7 settings, unchanged | Provisional; physically acceptable |
-| Forehand Loop | `5:40:20:40:35:0` | Hardware-tuned baseline |
-| Backhand Loop | `76:40:20:40:35:0` | Hardware-tuned baseline |
+| Forehand Loop | `5:40:20:35:40:0` | Hardware-tuned baseline |
+| Backhand Loop | `76:40:20:35:40:0` | Hardware-tuned baseline |
 
 Push spin angle 180 represents the tested backspin configuration; Loop spin angle 0 represents topspin. Direction is calibrated separately for forehand/backhand. These exact four parameter vectors are **not generated from the no-spin placement estimator**; the original five-point no-spin model remains available for independent placement work.
 
 The **Basic Level 1** Push and Loop vectors are reproduced exactly. Because only one tuned vector per stroke was supplied, **Basic Levels 2 and 3 are provisional progressions**: respectively +3/+6 Speed, +3/+6 Spin, and +10/+20 Frequency relative to Level 1, with Direction, Arc, and SpinType unchanged. Drives keep all their previous v7 difficulty settings. Combined and Complex factory drills use the Level 1 versions of their constituent shots at all difficulty settings, as before.
 
-Factory preset **version 8** updates recognized *untouched* stored legacy factory levels while preserving user-edited levels and custom drills. This update does **not** purge historical migration code or older saved records; cleanup can happen after the complete baseline is validated and backed up. Calibration Engine measurements remain separate from the factory drill library and are not automatically applied to drills.
+Factory preset **version 9** updates recognized *untouched* stored legacy factory levels while preserving user-edited levels and custom drills. This update does **not** purge historical migration code or older saved records; cleanup can happen after the complete baseline is validated and backed up. Calibration Engine measurements remain separate from the factory drill library and are not automatically applied to drills.
 
-**Frequency 15:** Earlier OpenPong versions imposed a minimum of 20. v8 accepts 15 through the editor, clipboard parser, drill validation, and Dora protocol encoder to preserve your exact tested Push values. The interval formula supports this value, but **wire-level verification with the live robot through OpenPong remains outstanding**. Do not assume changing only the UI limit establishes full hardware compatibility.
+**Correction from v8:** Frequency and Arc had been interchanged in the four tuned vectors. v9 restores Frequency 35 for all four, with Arc 15 for Push and Arc 40 for Loop, and reinstates the normal frequency range 20–170. Untouched erroneous v8 presets are recognized and upgraded without replacing manually edited levels.
 
 ### Validation status
 
