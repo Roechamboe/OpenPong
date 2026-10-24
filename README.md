@@ -14,7 +14,7 @@ This standalone fork keeps a **modular robot adapter API** so contributors can a
 - Tap a drill to start; long-press or tap the ≡ grip to edit; drag the grip to reorder.
 - To stop early, disconnect from the UI or use the robot's physical stop button.
 
-**Hardware safety:** Session stopping is sent over BLE. Always keep the robot's physical stop accessible, especially while testing unfamiliar shot parameters.
+**Hardware safety:** A prominent **■ STOP ROBOT** button is always displayed in the Connect / Reps / Time card. It cancels the current app session and requests the Dora stop sequence over BLE, even during drill setup. The status reports that a command was sent or failed, **not proof of a physical stop**. If Bluetooth is disconnected, stalled or the robot continues feeding, use the robot's **physical stop**. Always keep it accessible, especially while testing unfamiliar shot parameters.
 
 ## Fundamental shot baseline (factory v10)
 
