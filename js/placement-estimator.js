@@ -20,7 +20,7 @@ export function initPlacementEstimator(){
  function render(){
   const X=Number(x.value),Y=Number(y.value),p=estimatePlacement(X,Y);
   el('placement-x-label').textContent=X;el('placement-y-label').textContent=Y;
-  el('placement-marker').setAttribute('cx',312-X*24);
+  el('placement-marker').setAttribute('cx',24+X*24);
   el('placement-marker').setAttribute('cy',286-Y*24);
   el('placement-output').hidden=!p.valid;copy.disabled=!p.valid;
   if(!p.valid){status.textContent=p.reason;return;}
