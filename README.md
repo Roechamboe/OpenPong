@@ -40,7 +40,7 @@ From the top-right menu, choose **Ball Placement Estimator** (immediately above 
 
 ### Measured calibration procedure
 
-We divided the receiver's table half into **12 equal intervals across (grid lines X = 0–12)** and **11 intervals along its length (grid lines Y = 0–11)**. There are 13 × 12 grid intersections, not 12 × 11 points. The origin **(0,0) is the receiver's backhand corner from the robot's perspective**. X increases toward the receiver's forehand; Y increases from receiver end line toward net. We placed a Post-it note at each target and adjusted the robot's Direction, Speed and Arc until multiple shots out of ten hit each note. Actual hit counts were not recorded.
+We divided the receiver's table half into **12 equal intervals across (grid lines X = 0–12)** and **11 intervals along its length (grid lines Y = 0–11)**. There are 13 × 12 grid intersections, not 12 × 11 points. The origin **(0,0) is the receiver's leftmost corner at their end line, from the receiver's own viewpoint**. X increases left-to-right across the receiver's table half; Y increases from the receiver's end line toward the net. No right-handedness or forehand/backhand convention is implied. We placed a Post-it note at each target and adjusted the robot's Direction, Speed and Arc until multiple shots out of ten hit each note. Actual hit counts were not recorded.
 
 ![Five numbered Post-it calibration targets, gridded receiver half, and quadrilateral interpolation region](images/placement-calibration-grid.svg)
 
@@ -101,7 +101,7 @@ Dir:Speed:Spin:Freq:Arc:SpinType
 
 The estimator rounds predicted Direction and Speed to integers, sets **Spin = 0** (no spin), **Freq = 35** (provisional firing frequency), and **SpinType = 180** (Dora editor's native spin-angle field, not a separate spin mode). Those latter defaults have *not* been established by these placement measurements. In the drill editor, each ball variant has a **Paste parameters** control that reads the clipboard, validates all six values, and updates only that ball variant. Valid values are integer Direction 0–90, Speed 20–100, Spin 0–60, Freq 20–170, Arc -65–65, and SpinType/angle 0–359. Invalid vectors leave the ball unchanged. Save the drill to persist an imported vector. Clipboard access requires a supported browser and secure origin (HTTPS/localhost).
 
-The X-axis is drawn increasing **right-to-left** on the receiver table view, so **(0,0) is the receiver's backhand corner**. This correction changes display orientation, not the original calibration coordinates or fitted equations.
+The X-axis is drawn increasing **left-to-right** from the receiver's viewpoint; **(0,0) is their leftmost end-line corner**. This correction changes display orientation, not the original calibration coordinates or fitted equations.
 
 ## Extending the robot abstraction
 
