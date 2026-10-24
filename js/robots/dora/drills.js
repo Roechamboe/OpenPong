@@ -1,7 +1,7 @@
 // Dora-native drill model. Never mix these values with Nova wheel-RPM arrays.
 const KEY = 'openpong_dora_drills_v1';
 export const CATEGORIES = Object.freeze(['basic','combined','complex','custom-a','custom-b','custom-c']);
-export const DEFAULT_BALL = Object.freeze({ direction:45, speed:20, spin:0, arc:0, frequencyLevel:20, angle:0 });
+export const DEFAULT_BALL = Object.freeze({ direction:15, speed:30, spin:10, arc:15, frequencyLevel:35, angle:180 });
 const clone = value => JSON.parse(JSON.stringify(value));
 const ball = overrides => ({ ...DEFAULT_BALL, ...overrides });
 function drill(name, steps, category='basic') {
