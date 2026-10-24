@@ -1,13 +1,13 @@
 // Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
-import { parseBallVector } from './ball-vector.js?v=2';
+import { parseBallVector } from './ball-vector.js?v=3';
 import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
 const robot=getActiveAdapter();
 import { runMode } from './state.js';
 import { CATEGORIES, DEFAULT_BALL, loadDrills, saveDrills, compileDrill,
-  exportDrills, importDrills, newDrill } from './robots/dora/drills.js?v=tuned-baseline-v8';
+  exportDrills, importDrills, newDrill } from './robots/dora/drills.js?v=tuned-baseline-v9';
 
 let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
 let stopTimer=null, running=false, busy=false, token=0, launches=0;
@@ -24,7 +24,7 @@ function status(s){$('dora-status').textContent=s;}
 function setting(id,label,min,max,step=1){
  return `<label class="editor-field" style="min-width:0;display:flex;flex-direction:column;gap:4px"><span>${label}</span><input type="number" data-field="${id}" min="${min}" max="${max}" step="${step}" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px"></label>`;
 }
-const fields=[['direction','Direction',0,90],['speed','Speed',20,100],['spin','Spin',0,60],['arc','Arc',-65,65],['frequencyLevel','Frequency',15,170],['angle','Spin angle',0,359]];
+const fields=[['direction','Direction',0,90],['speed','Speed',20,100],['spin','Spin',0,60],['arc','Arc',-65,65],['frequencyLevel','Frequency',20,170],['angle','Spin angle',0,359]];
 function persist(){saveDrills(drills);renderCards();}
 function refresh(){
  $('dora-panel').hidden=false;
