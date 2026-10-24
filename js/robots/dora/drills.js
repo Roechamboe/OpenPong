@@ -23,7 +23,7 @@ export const CALIBRATED_FOREHAND=Object.freeze({
  direction:15,speed:30,spin:10,arc:15,frequencyLevel:35,angle:180
 });
 function shot(symbol,difficulty=1){
- const m=/^(push|drive|loop)\\((b|f)\\)$/.exec(symbol);
+ const m=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
  if(!m)throw new Error('Unknown factory preset token '+symbol);
  const [,type,side]=m,level=difficulty-1;
  // Drive(f) level 1 is precisely the physically observed reference.
@@ -41,7 +41,7 @@ function shot(symbol,difficulty=1){
 // Snapshot of the prior *uncalibrated* factory generator, used only to
 // migrate untouched presets. Modified user data must never be overwritten.
 function previousShot(symbol,difficulty=1){
- const [,type,side]=/^(push|drive|loop)\\((b|f)\\)$/.exec(symbol);
+ const [,type,side]=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
  const i=difficulty-1;
  return ball({
   direction:side==='b'?30:60,
