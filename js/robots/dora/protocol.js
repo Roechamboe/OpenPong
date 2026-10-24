@@ -59,14 +59,14 @@ function get16(b, offset) { return (b[offset] << 8) | b[offset + 1]; }
  * Exact integer formulas from TableSmartFragment's updatePointSelect()
  * and initPointDefault(); intervalMs is the real wire value.
  * Direction 0..90, speed 20..100, spin 0..60, arc -65..65,
- * frequencyLevel 15..170 and angle 0..359.
+ * frequencyLevel 20..170 and angle 0..359.
  */
 export function encodeParameters({ direction, speed, spin, arc, frequencyLevel, angle }) {
   integer(direction, 0, 90, 'direction');
   integer(speed, 20, 100, 'speed');
   integer(spin, 0, 60, 'spin');
   integer(arc, -65, 65, 'arc');
-  integer(frequencyLevel, 15, 170, 'frequencyLevel');
+  integer(frequencyLevel, 20, 170, 'frequencyLevel');
   integer(angle, 0, 359, 'angle');
   const intervalMs = frequencyLevel < 30
     ? (30 - frequencyLevel) * 100 + 2000
