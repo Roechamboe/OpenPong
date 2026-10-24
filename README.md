@@ -34,6 +34,62 @@ Upgrades update untouched factory levels while preserving levels previously edit
 
 **Not yet validated:** All drill presets, multi-ball operation, and volume/brightness commands require further physical testing. Pause/resume is not supported.
 
+## Experimental ball placement estimator
+
+From the top-right menu, choose **Ball Placement Estimator** (immediately above **Device Settings**). This is a reference calculator: it **does not send BLE commands, update drills or apply settings**. Its assumptions are **No Spin** and **Difficulty Level 1**.
+
+### Measured calibration procedure
+
+We divided the receiver's table half into **12 equal intervals across (grid lines X = 0–12)** and **11 intervals along its length (grid lines Y = 0–11)**. There are 13 × 12 grid intersections, not 12 × 11 points. The origin **(0,0) is the receiver's forehand corner from the robot's perspective**. X increases toward the receiver's backhand; Y increases from receiver end line toward net. We placed a Post-it note at each target and adjusted the robot's Direction, Speed and Arc until multiple shots out of ten hit each note. Actual hit counts were not recorded.
+
+![Five numbered Post-it calibration targets, gridded receiver half, and quadrilateral interpolation region](images/placement-calibration-grid.svg)
+
+| Target | (X, Y) | Direction | Speed | Arc |
+| ---: | --- | ---: | ---: | ---: |
+| 1 | (1,1) | 80 | 48 | 15 |
+| 2 | (11,1) | 0 | 50 | 15 |
+| 3 | (3,9) | 81 | 29 | 20 |
+| 4 | (9,9) | 0 | 28 | 40 |
+| 5 | (6,5) | 42 | 38 | 15 |
+
+![Observed speed versus landing-depth grid coordinate with first-pass linear trend](images/placement-speed-depth.svg)
+
+### Deriving the first-pass estimator (v0.1)
+
+At depth Y = 1, the two measured direction settings imply **D = 88 − 8X**. At depth Y = 9, they imply **D = 121.5 − 13.5X**. Linear interpolation between these *two calibrated endpoints at each depth* uses:
+
+```text
+t = (Y - 1)/8
+leftX = 1 + 2t
+rightX = 11 - 2t
+leftDirection = 80 + t
+Direction(X,Y) = leftDirection * (rightX - X)/(rightX - leftX)
+```
+
+At (6,5), direction interpolates to **40.25**, compared with measured **42** (difference 1.75). This is a sanity check, not an independent validation.
+
+A least-squares fit of all five speed observations to depth gives:
+
+```text
+Speed(Y) = 51.5625 - 2.5625*Y
+```
+
+It predicts speed 49 at Y=1, 38.75 at Y=5, and 28.5 at Y=9; the observed speed pairs at Y=1 and Y=9 were 48/50 and 29/28 respectively. Direction, speed and arc can interact; this correlation does **not** prove speed independently sets depth.
+
+**Arc is not modeled continuously:** the UI selects the arc value from the geographically closest of the five calibrated points, measured in squared grid-distance. In particular, at Y=9 the observed arcs differ substantially (20 at X=3 versus 40 at X=9). Using nearest-neighbor arc is only a provisional starting strategy.
+
+The UI predicts only within the quadrilateral connecting (1,1), (11,1), (9,9), (3,9):
+
+```text
+1 <= Y <= 9,  leftX <= X <= rightX
+```
+
+Outside this region it displays no prediction, rather than extrapolating. Slider steps are integers to match the Post-it coordinate system. Values are *experimental estimates* until physically checked.
+
+### Validation and safety
+
+Next, compare predicted and observed landings at additional positions (e.g. (3,5), (9,5), (6,7)), recording hit counts out of ten and actual landing coordinates; use those measurements to improve the two-dimensional direction model and arc handling. Keep the robot height, position and orientation fixed between tests. Use the robot's physical stop while testing unfamiliar parameters.
+
 ## Extending the robot abstraction
 
 `js/core/robot-manager.js` exports:
