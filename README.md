@@ -36,7 +36,7 @@ Upgrades update untouched factory levels while preserving levels previously edit
 
 ## Modular calibration engine
 
-Open **☰ → Calibration Engine**, above **Ball Placement Estimator**. The calibration editor displays saved grid target measurements; you can edit, remove, and add targets to expand from five to nine or more, then **Save calibration**. All changes are local to the browser (`openpong_placement_calibration_v1`); existing drills are not modified. New rows carry *placeholder* robot values, so physically measure and replace them before saving. Reset restores the original five observed points. There must be at least 3 non-collinear points for predictions.
+Open **☰ → Calibration Engine**, above **Ball Placement Estimator**. The calibration editor uses the same shared receiver-view table visualization as the placement estimator. Tap a numbered marker to edit that point's X, Y, Direction, Speed, and Arc; tap an empty grid intersection to add a new point using provisional nearest-point parameters. Unsaved changes remain in a draft until **Save calibration**. You can remove, edit, and add targets to expand from five to nine or more, then **Save calibration**. All changes are local to the browser (`openpong_placement_calibration_v1`); existing drills are not modified. New targets carry *placeholder* robot values, so physically measure and replace them before saving. Reset restores the original five observed points. There must be at least 3 non-collinear points for predictions.
 
 **Machine placement assumption:** robot centered on the center line at the *opponent's end line*, represented by **X=6, Y=22** if the receiver's end line is Y=0, receiver's net is Y=11, and the opponent end line is Y=22. The machine location is stored as profile metadata, not inferred from ball flight. This first version does **not** automatically compensate for moving or rotating the robot; measurements must be taken again if its position changes.
 
@@ -49,7 +49,7 @@ Direction(P) = w1 D1 + w2 D2 + w3 D3
 Speed(P) = w1 S1 + w2 S2 + w3 S3
 ```
 
-Known targets reproduce their exact measurements. Predictions are restricted to the convex hull of the measurements; no extrapolation outside the hull. Arc still uses the nearest measured target, since a smoothly interpolated arc has not been physically validated. Nine-point calibration means adding four new measured targets; no equation edits are required.
+Known targets reproduce their exact measurements. Predictions are restricted to the convex hull of the measurements; no extrapolation outside the hull. Arc still uses the nearest measured target, since a smoothly interpolated arc has not been physically validated. Nine-point calibration means adding four new measured targets; no equation edits are required. Both screens share `js/placement-map.js` for the receiver-perspective grid, convex-hull overlay, and measured-point markers.
 
 ## Experimental ball placement estimator
 
