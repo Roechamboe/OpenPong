@@ -1,15 +1,13 @@
+import {createPlacementMap} from './placement-map.js?v=1';
 import {estimatePlacement,loadCalibration} from './calibration-engine.js?v=1';
 const el=id=>document.getElementById(id),round=n=>Math.round(n*10)/10;
 export function initPlacementEstimator(){
  const page=el('placement-estimator-page'),x=el('placement-x'),y=el('placement-y'),status=el('placement-status'),copy=el('placement-copy');
+ const map=createPlacementMap(el('placement-map-container'));
  function render(){
-  const group=el('placement-calibration-markers');
-  if(group){group.replaceChildren();loadCalibration().points.forEach((p,i)=>{const ns='http://www.w3.org/2000/svg';const circle=document.createElementNS(ns,'circle');circle.setAttribute('cx',24+p.x*24);circle.setAttribute('cy',286-p.y*24);circle.setAttribute('r',7);circle.setAttribute('fill','#f8d16d');circle.setAttribute('stroke','white');const label=document.createElementNS(ns,'text');label.setAttribute('x',24+p.x*24);label.setAttribute('y',290-p.y*24);label.setAttribute('text-anchor','middle');label.setAttribute('font-size','10');label.setAttribute('fill','#333');label.textContent=String(i+1);group.append(circle,label);});}
-
   const X=Number(x.value),Y=Number(y.value),p=estimatePlacement(X,Y);
   el('placement-x-label').textContent=X;el('placement-y-label').textContent=Y;
-  el('placement-marker').setAttribute('cx',24+X*24);
-  el('placement-marker').setAttribute('cy',286-Y*24);
+  map.render({points:loadCalibration().points,selected:{x:X,y:Y}});
   el('placement-output').hidden=!p.valid;copy.disabled=!p.valid;
   if(!p.valid){status.textContent=p.reason;return;}
   el('placement-direction').textContent=round(p.direction);
