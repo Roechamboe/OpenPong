@@ -43,13 +43,26 @@ function renderCards(){
  </button>`).join('')+
  (category.startsWith('custom-')?'<div style="display:flex;justify-content:center;margin:15px 0"><button class="btn-swap" id="dora-add-drill" type="button" title="Create new drill" aria-label="Create new drill">＋</button></div>':'');
 }
-function editor(){
+// Scroll only the editor body, never the underlying drill page.
+function scrollToEditorStep(index){
+ const scroller=$('dora-editor-body');
+ const target=$('dora-steps').querySelector('[data-step-index="'+index+'"]');
+ if(!scroller||!target)return;
+ requestAnimationFrame(()=>{
+  const offset=target.getBoundingClientRect().top-scroller.getBoundingClientRect().top;
+  scroller.scrollTo({top:scroller.scrollTop+offset-8,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+ });
+}
+function editor({focusStep=null}={}){
+ const body=$('dora-editor-body');
+ const previousScroll=body.scrollTop;
+
  $('dora-editor').hidden=false;
  $('dora-editor-name').value=draft.name;
  $('dora-editor-shuffle').checked=!!draft.shuffle;
  const steps=draft.levels[level-1];
  $('dora-steps').innerHTML=steps.map((options,i)=>`
- <div class="ball-group" style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:10px">
+ <div class="ball-group" data-step-index="${i}" style="margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:10px">
   <div class="group-title" style="display:flex;align-items:center;justify-content:space-between">
    <strong>Ball ${i+1}</strong>
    <div style="display:flex;gap:5px">
@@ -75,11 +88,17 @@ function editor(){
     </div>
   </div>`).join('')}
  </div>`).join('')+`<div class="swap-zone" style="margin:-10px 0 20px"><button id="dora-add-step" class="btn-swap" type="button" data-action="add-step" title="Add New Ball" aria-label="Add New Ball" ${steps.length>=28?'disabled':''} style="color:var(--primary);border-color:var(--primary);width:32px;height:32px"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>`;
+ if(focusStep!==null)scrollToEditorStep(focusStep);
+ else body.scrollTop=previousScroll;
 }
 function openEditor(id){
  const found=drills.find(d=>d.id===id);if(!found)return;
  editing=id;draft=clone(found);editor();
- $('dora-editor').scrollIntoView({behavior:'smooth',block:'start'});
+ $('dora-editor').hidden=false;
+ $('dora-editor').classList.add('open');
+ document.body.style.overflow='hidden';
+ $('dora-editor-body').scrollTop=0;
+ $('dora-editor-close').focus({preventScroll:true});
 }
 function commitEditor(){
  draft.name=$('dora-editor-name').value.trim().slice(0,40);
@@ -89,7 +108,16 @@ function commitEditor(){
  const next=drills.map(d=>d.id===editing?draft:d);
  saveDrills(next);drills=next;closeEditor();renderCards();
 }
-function closeEditor(){editing=null;draft=null;$('dora-editor').hidden=true;}
+function closeEditor(){
+ if(!editing)return;
+ const previous=editing;
+ editing=null;draft=null;
+ $('dora-editor').classList.remove('open');
+ $('dora-editor').hidden=true;
+ document.body.style.overflow='';
+ const grip=[...document.querySelectorAll('[data-edit]')].find(node=>node.dataset.edit===previous);
+ grip?.focus({preventScroll:true});
+}
 function modifyEditor(event){
  const target=event.target;
  const i=Number(target.dataset.step),j=Number(target.dataset.opt);
@@ -158,7 +186,6 @@ export function initDoraPanel(){
     #dora-editor .editor-field { min-width:0; }
     #dora-editor .editor-field input { min-width:0; max-width:100%; box-sizing:border-box; }
     #dora-editor .option-card { min-width:0; max-width:100%; }
-    #dora-editor .dora-add-step-button { width:100%; max-width:180px; margin:12px auto; }
     #dora-editor .btn-action:disabled {opacity:.35;cursor:not-allowed;}
     #dora-editor .group-title button { flex:0 0 auto; min-width:30px; }
     #dora-cards .drill-grab-handle {touch-action:none; user-select:none;}
@@ -242,16 +269,25 @@ export function initDoraPanel(){
  <div id="dora-tabs" class="tabs-container"></div>
  <div id="dora-cards" class="drill-list"></div>
 
- <section id="dora-editor" class="modal" hidden style="position:relative;width:100%;max-width:none;padding:14px;margin:14px 0;background:var(--card,var(--bg));border:1px solid var(--border)">
-  <h2>Edit Dora drill</h2>
-  <label>Drill name <input id="dora-editor-name" maxlength="40" style="width:100%;padding:8px"></label>
-  <label><input id="dora-editor-shuffle" type="checkbox"> Shuffle ball order each run</label>
-  <p style="font-size:12px">Variants are selected randomly per shot. Scatter is applied to direction.</p>
-  <div id="dora-steps"></div>
-  <div style="display:flex;gap:8px;margin:12px 0">
-   <button id="dora-save" class="btn-modal btn-save" type="button">Save</button>
-   <button id="dora-cancel" class="btn-modal" type="button">Cancel</button>
-   <button id="dora-delete" class="btn-modal" type="button">Delete</button>
+ <section id="dora-editor" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="dora-editor-title" hidden>
+  <div class="modal">
+   <div class="modal-header">
+    <div class="dora-editor-heading">
+     <h2 id="dora-editor-title" class="modal-title">Edit Dora Drill</h2>
+     <button id="dora-editor-close" type="button" class="modal-close" aria-label="Close drill editor">×</button>
+    </div>
+    <label class="dora-editor-name-label">Drill name <input id="dora-editor-name" maxlength="40"></label>
+    <label class="dora-editor-shuffle"><input id="dora-editor-shuffle" type="checkbox"> Shuffle ball order each run</label>
+   </div>
+   <div id="dora-editor-body" class="modal-body" tabindex="0" aria-label="Drill balls">
+    <p class="dora-editor-tip">Variants are selected randomly per shot. Scatter is applied to direction.</p>
+    <div id="dora-steps"></div>
+   </div>
+   <div class="modal-footer">
+    <button id="dora-save" class="btn-modal btn-save" type="button">Save</button>
+    <button id="dora-cancel" class="btn-modal" type="button">Cancel</button>
+    <button id="dora-delete" class="btn-modal" type="button">Delete</button>
+   </div>
   </div>
  </section>
  <p style="font-size:12px">Dora stops automatically when the selected Time or Reps limit is reached. To stop early, use Disconnect or the robot's physical stop control. Pause/resume is not yet supported.</p>`;
@@ -336,18 +372,22 @@ export function initDoraPanel(){
   if(grip&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openEditor(grip.dataset.edit);}
  });
  $('dora-editor').onchange=modifyEditor;
+ $('dora-editor-close').onclick=closeEditor;
+ $('dora-editor').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeEditor();}});
  $('dora-steps').onclick=e=>{
   const btn=e.target.closest('[data-action]');if(!btn)return;
   const i=Number(btn.dataset.step),j=Number(btn.dataset.opt),steps=draft.levels[level-1];
+  let focusStep=null;
   switch(btn.dataset.action){
-   case 'up': if(i>0)[steps[i-1],steps[i]]=[steps[i],steps[i-1]];break;
-   case 'down':if(i<steps.length-1)[steps[i+1],steps[i]]=[steps[i],steps[i+1]];break;
-   case 'duplicate':if(steps.length<28)steps.splice(i+1,0,clone(steps[i]));break;
-   case 'add-step':if(steps.length<28)steps.push(clone(steps[steps.length-1]||[DEFAULT_BALL]));break;
-   case 'remove':if(steps.length>1)steps.splice(i,1);break;
+   case 'up':if(i>0){[steps[i-1],steps[i]]=[steps[i],steps[i-1]];focusStep=i-1;}break;
+   case 'down':if(i<steps.length-1){[steps[i+1],steps[i]]=[steps[i],steps[i+1]];focusStep=i+1;}break;
+   case 'duplicate':if(steps.length<28){steps.splice(i+1,0,clone(steps[i]));focusStep=i+1;}break;
+   case 'add-step':if(steps.length<28){steps.push(clone(steps[steps.length-1]||[DEFAULT_BALL]));focusStep=steps.length-1;}break;
+   case 'remove':if(steps.length>1){steps.splice(i,1);focusStep=Math.min(i,steps.length-1);}break;
    case 'variant':if(steps[i].length<12)steps[i].push(clone(steps[i][0]));break;
    case 'remove-option':if(steps[i].length>1)steps[i].splice(j,1);break;
-  }editor();
+  }
+  editor({focusStep});
  };
  $('dora-save').onclick=()=>{try{commitEditor();status('Drill saved');}catch(err){alert(err.message);}};
  $('dora-cancel').onclick=closeEditor;
