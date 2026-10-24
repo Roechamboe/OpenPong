@@ -20,7 +20,7 @@ export function initPlacementEstimator(){
  function render(){
   const X=Number(x.value),Y=Number(y.value),p=estimatePlacement(X,Y);
   el('placement-x-label').textContent=X;el('placement-y-label').textContent=Y;
-  el('placement-marker').setAttribute('cx',24+X*24);
+  el('placement-marker').setAttribute('cx',312-X*24);
   el('placement-marker').setAttribute('cy',286-Y*24);
   el('placement-output').hidden=!p.valid;copy.disabled=!p.valid;
   if(!p.valid){status.textContent=p.reason;return;}
@@ -32,7 +32,7 @@ export function initPlacementEstimator(){
  x.addEventListener('input',render);y.addEventListener('input',render);
  copy.addEventListener('click',async()=>{
   const p=estimatePlacement(+x.value,+y.value);if(!p.valid)return;
-  const value='X='+x.value+', Y='+y.value+', Direction='+round(p.direction)+', Speed='+round(p.speed)+', Arc='+p.arc+', Spin=No Spin, Difficulty=1';
+  const value=[Math.round(p.direction),Math.round(p.speed),0,35,p.arc,180].join(':');
   try{await navigator.clipboard.writeText(value);status.textContent='Settings copied. Verify on the table.';}
   catch{status.textContent='Clipboard unavailable; use the displayed values.';}
  });
