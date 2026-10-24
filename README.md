@@ -16,32 +16,32 @@ This standalone fork keeps a **modular robot adapter API** so contributors can a
 
 **Hardware safety:** Session stopping is sent over BLE. Always keep the robot's physical stop accessible, especially while testing unfamiliar shot parameters.
 
-## Preset calibration and limitations
+## Fundamental shot baseline (factory v8)
 
-The factory library preserves the 34 drill names and each source drill's sequence from `main`. The **only hardware-tested shot** so far is **forehand push, half-long**: Direction 15, Speed 30, Spin 10, Arc 15, Frequency 35, Spin Angle 180. Dora's backhand placement and the drive/loop variants are provisional estimates derived from the source presets' placement, wheel-speed relationship and relative frequency. **They are not verified equivalents** and should be tested individually. The basic drills reflect their three source difficulty levels; combined and complex drills retain the source level-one ball values at each difficulty.
+The factory drills use **six fundamental Dora-native shots**. Four are now based on your physically tuned settings; **Drive remains unchanged from v7** because it was reported to land comfortably on the table and feel appropriate, though somewhat challenging for Level 1.
 
-Upgrades update untouched factory levels while preserving levels previously edited by the user. Back up custom configurations with Export Drills before physical calibration.
+The vector order is exactly **Dir:Speed:Spin:Freq:Arc:SpinType**. Frequency and Arc must not be swapped.
 
-### Calibration-derived six fundamental factory shots (v7)
+| Shot | Level 1 parameter vector | Status |
+| --- | --- | --- |
+| Forehand Push | `11:28:10:15:35:180` | Hardware-tuned baseline |
+| Backhand Push | `71:28:10:15:35:180` | Hardware-tuned baseline |
+| Forehand Drive | Existing v7 settings, unchanged | Provisional; physically acceptable |
+| Backhand Drive | Existing v7 settings, unchanged | Provisional; physically acceptable |
+| Forehand Loop | `5:40:20:40:35:0` | Hardware-tuned baseline |
+| Backhand Loop | `76:40:20:40:35:0` | Hardware-tuned baseline |
 
-The six basic building blocks for Basic, Combined and Complex drills now have explicit **landing targets**, resolved against the five-point **factory no-spin calibration** (`DEFAULT_PROFILE`). The following coordinates use the receiver's left-to-right X axis and assume a **right-handed receiver** for the forehand/backhand names:
+Push spin angle 180 represents the tested backspin configuration; Loop spin angle 0 represents topspin. Direction is calibrated separately for forehand/backhand. These exact four parameter vectors are **not generated from the no-spin placement estimator**; the original five-point no-spin model remains available for independent placement work.
 
-| Fundamental shot | Target (X,Y) | Spin type | Baseline modification |
-| --- | --- | --- | --- |
-| Backhand push | (3,5) | Backspin (angle 180) | Spin 10; speed −3, no arc offset |
-| Forehand push | (9,5) | Backspin (angle 180) | Spin 10; speed −3, no arc offset |
-| Backhand drive | (3,3) | Topspin (angle 0) | Spin 10; speed +4, arc -3 |
-| Forehand drive | (9,3) | Topspin (angle 0) | Spin 10; speed +4, arc -3 |
-| Backhand loop | (3,7) | Topspin (angle 0) | Spin 18; speed +2, arc +7 |
-| Forehand loop | (9,7) | Topspin (angle 0) | Spin 18; speed +2, arc +7 |
+The **Basic Level 1** Push and Loop vectors are reproduced exactly. Because only one tuned vector per stroke was supplied, **Basic Levels 2 and 3 are provisional progressions**: respectively +3/+6 Speed, +3/+6 Spin, and +10/+20 Frequency relative to Level 1, with Direction, Arc, and SpinType unchanged. Drives keep all their previous v7 difficulty settings. Combined and Complex factory drills use the Level 1 versions of their constituent shots at all difficulty settings, as before.
 
-**Push refinement:** Physical tests confirmed appropriate backspin but excessive pace and half-long-to-long travel without a second bounce. Version 7 reduces the push Speed parameter by **3** for both backhand and forehand at every difficulty level and for push steps in combined/complex drills, with spin, arc, direction, and frequency unchanged. Drive and Loop remain identical to v6. This is an unverified controlled speed experiment; no claim is made that the new push will bounce twice. The prior v6 push is retained as an exact migration snapshot for preserving manually edited drills.
+Factory preset **version 8** updates recognized *untouched* stored legacy factory levels while preserving user-edited levels and custom drills. This update does **not** purge historical migration code or older saved records; cleanup can happen after the complete baseline is validated and backed up. Calibration Engine measurements remain separate from the factory drill library and are not automatically applied to drills.
 
-Direction is the measured-profile interpolation at the chosen target; Speed and Arc start from that location's interpolation and nearest measured arc, plus the shot-style offsets above. Parameters are rounded to valid robot integers. The three Basic difficulty levels add speed offsets 0/+3/+6 and spin offsets 0/+3/+6, with preserved shot-category frequency progressions. Combined and Complex patterns retain level-one shot definitions, consistent with the source.
+**Frequency 15:** Earlier OpenPong versions imposed a minimum of 20. v8 accepts 15 through the editor, clipboard parser, drill validation, and Dora protocol encoder to preserve your exact tested Push values. The interval formula supports this value, but **wire-level verification with the live robot through OpenPong remains outstanding**. Do not assume changing only the UI limit establishes full hardware compatibility.
 
-**Important:** The original five landing measurements used *no spin*. These spin types, magnitudes, speed/arc corrections, and the resulting landing locations **are provisional starting presets**, not experimentally validated spin trajectories. Particularly, the old separately documented half-long forehand push (15/30/10/15/35/180) is a distinct hardware-tested anchor and does not establish that the new forehand push preset will hit (9,5). Verify each shot with physical launches and adjust as needed.
+### Validation status
 
-Factory preset version 7 refreshes only *recognized untouched legacy factory configurations*; manually edited presets remain intact. Factory generation deliberately uses the bundled five-point measurements, not browser-local user calibrations, so editing the Calibration Engine does **not** automatically rewrite saved factory drills. Use the estimator clipboard workflow to apply custom measured settings to specific drill balls.
+Your tests found that the earlier Push had appropriate backspin but excessive pace; Drive was faster/flatter, Loop had more arc, less pace, stronger topspin, and both Drive and Loop landed comfortably. The four updated Push/Loop vectors are your selected tuned baselines. Live testing of their saved factory sequences and their Level 2/3 progressions is still needed. Keep the robot's physical stop accessible when verifying settings.
 
 ## Dora functions
 
@@ -195,7 +195,7 @@ Dir:Speed:Spin:Freq:Arc:SpinType
 40:39:0:35:15:180
 ```
 
-The estimator rounds predicted Direction and Speed to integers, sets **Spin = 0** (no spin), **Freq = 35** (provisional firing frequency), and **SpinType = 180** (Dora editor's native spin-angle field, not a separate spin mode). Those latter defaults have *not* been established by these placement measurements. In the drill editor, each ball variant has a **Paste parameters** control that reads the clipboard, validates all six values, and updates only that ball variant. Valid values are integer Direction 0–90, Speed 20–100, Spin 0–60, Freq 20–170, Arc -65–65, and SpinType/angle 0–359. Invalid vectors leave the ball unchanged. Save the drill to persist an imported vector. Clipboard access requires a supported browser and secure origin (HTTPS/localhost).
+The estimator rounds predicted Direction and Speed to integers, sets **Spin = 0** (no spin), **Freq = 35** (provisional firing frequency), and **SpinType = 180** (Dora editor's native spin-angle field, not a separate spin mode). Those latter defaults have *not* been established by these placement measurements. In the drill editor, each ball variant has a **Paste parameters** control that reads the clipboard, validates all six values, and updates only that ball variant. Valid values are integer Direction 0–90, Speed 20–100, Spin 0–60, Freq 15–170, Arc -65–65, and SpinType/angle 0–359. Invalid vectors leave the ball unchanged. Save the drill to persist an imported vector. Clipboard access requires a supported browser and secure origin (HTTPS/localhost).
 
 The X-axis is drawn increasing **left-to-right** from the receiver's viewpoint; **(0,0) is their leftmost end-line corner**. This correction changes display orientation, not the original calibration coordinates or fitted equations.
 
