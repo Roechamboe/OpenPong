@@ -9,33 +9,64 @@ function drill(name, steps, category='basic') {
 }
 // Derived from Nova's js/constants.js names and ordered sequences.
 // Dora speed/spin/arc values are approximate starting points, NOT RPM equivalents.
-export const FACTORY_PRESET_VERSION=4;
+export const FACTORY_PRESET_VERSION=5;
 const LEGACY_STARTER_IDS=new Set(['center-drive','left-drive','right-drive','backspin','topspin','left-right','center-left-right','alternating-spin','wide-placement']);
 const LAYOUT={
  basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
  combined:['loop(b)-drive(b)','loop(f)-drive(f)','drive(f)-drive(b)','push(f)-drive(f)','push(b)-loop(b)','loop(f)-drive(b)','push(f)-loop(b)','drive(f)-drive(f)','push(b)-loop(f)','push(f)-loop(f)','loop(f)-loop(f)','loop(b)-drive(f)'],
  complex:['push(b)-loop(f)-drive(b)','push(f)-loop(b)-drive(f)','loop(f)-drive(f)-drive(b)','loop(b)-drive(f)-drive(b)','drive(f)-drive(f)-drive(f)','push(f)-loop(f)-drive(f)','push(b)-loop(b)-drive(b)','push(f)-loop(b)-drive(b)','loop(f)-drive(b)-drive(f)','loop(b)-drive(b)-drive(f)','push(b)-loop(f)-drive(f)','push(b)-loop(b)-drive(f)','drive(b)-drive(f)-drive(f)','random-drive','23-random-drive','all-random']
 };
-// Physical reference (user tested): center/forehand half-long drive at
-// direction 15, speed 30, spin 10, arc 15, frequency 35, angle 180.
-// ALL other positions and strokes remain unverified approximations.
-export const CALIBRATED_FOREHAND=Object.freeze({
+// One physically observed anchor: forehand PUSH, half-long, center.
+// No other stroke, direction or depth has been physically calibrated.
+export const CALIBRATED_FOREHAND_PUSH=Object.freeze({
  direction:15,speed:30,spin:10,arc:15,frequencyLevel:35,angle:180
 });
+// Preserve the earlier public name for consumers of this module.
+export const CALIBRATED_FOREHAND=CALIBRATED_FOREHAND_PUSH;
+
+// Source descriptors transcribed from main/js/constants.js DEFAULT_DRILLS.
+// These are *reference measurements*, not instructions for Nova hardware:
+// top/bottom are relative wheel values, frequency is the source pattern tempo.
+// The original presets all use height=50, forehand drop=+5, backhand drop=-5.
+// Combo/complex drills reuse the level-one source shot at every difficulty.
+const SOURCE_SHOTS=Object.freeze({
+ push:{wheelPairs:[[1547,2915],[1205,3257],[863,3599]],tempos:[10,20,30]},
+ drive:{wheelPairs:[[3545,2177],[3545,2177],[3545,2177]],tempos:[40,50,70]},
+ loop:{wheelPairs:[[1520,3572],[1178,3914],[836,4256]],tempos:[10,20,30]}
+});
+const PUSH_REFERENCE_AVG=(1547+2915)/2;
+const PUSH_REFERENCE_DIFF=Math.abs(1547-2915);
+// Provisional trajectories. Source height is the same (50) across the
+// source presets; stroke-specific Dora arcs therefore remain an inference.
+const DORA_ARC={push:15,drive:12,loop:21};
+
+/** Estimate one Dora-native ball from a source preset's individual shot. */
 function shot(symbol,difficulty=1){
- const m=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
- if(!m)throw new Error('Unknown factory preset token '+symbol);
- const [,type,side]=m,level=difficulty-1;
- // Drive(f) level 1 is precisely the physically observed reference.
- // Other offsets are working hypotheses for on-table testing.
- const speed={push:[25,29,33],drive:[30,35,40],loop:[34,39,44]}[type][level];
- const spin={push:[8,11,14],drive:[10,13,16],loop:[17,21,25]}[type][level];
- const arc={push:10,drive:15,loop:23}[type];
- const frequencyLevel=[35,45,55][level];
+ const match=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
+ if(!match)throw new Error('Unknown factory preset token '+symbol);
+ const [,type,side]=match;
+ const source=SOURCE_SHOTS[type],index=difficulty-1;
+ if(index<0||index>2)throw new RangeError('Invalid difficulty');
+ const [top,bottom]=source.wheelPairs[index];
+ const average=(top+bottom)/2;
+ const sourceDrop=side==='f'?5:-5; // main's forehand/backhand values
  return ball({
-  direction:side==='f'?CALIBRATED_FOREHAND.direction:75,
-  speed,spin,arc,frequencyLevel,
-  angle:type==='push'?0:180
+  // Mirror the tested +5 forehand placement to the -5 backhand placement.
+  // Direction 75 is an estimate, NOT a calibrated backhand reference.
+  direction:CALIBRATED_FOREHAND_PUSH.direction+(5-sourceDrop)*6,
+  speed:Math.max(20,Math.min(100,Math.round(
+    CALIBRATED_FOREHAND_PUSH.speed+(average-PUSH_REFERENCE_AVG)/75
+  ))),
+  spin:Math.max(0,Math.min(60,Math.round(
+    CALIBRATED_FOREHAND_PUSH.spin*Math.abs(top-bottom)/PUSH_REFERENCE_DIFF
+  ))),
+  arc:DORA_ARC[type],
+  // Preserve different main tempos instead of a generic difficulty ramp.
+  frequencyLevel:CALIBRATED_FOREHAND_PUSH.frequencyLevel+
+    (source.tempos[index]-SOURCE_SHOTS.push.tempos[0]),
+  // Drive reverses wheel-spin polarity relative to the observed push;
+  // this Dora orientation mapping is a hypothesis, not physically verified.
+  angle:(top-bottom)*(1547-2915)>=0?180:0
  });
 }
 // Snapshot of the prior *uncalibrated* factory generator, used only to
@@ -52,6 +83,20 @@ function previousShot(symbol,difficulty=1){
   angle:type==='push'?180:0
  });
 }
+// Version 4 generated one generic profile per name and difficulty; retain a
+// snapshot so we can update untouched stored factory levels, not user's edits.
+function legacyV4Shot(symbol,difficulty=1){
+ const [,type,side]=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
+ const i=difficulty-1;
+ return ball({
+  direction:side==='f'?15:75,
+  speed:{push:[25,29,33],drive:[30,35,40],loop:[34,39,44]}[type][i],
+  spin:{push:[8,11,14],drive:[10,13,16],loop:[17,21,25]}[type][i],
+  arc:{push:10,drive:15,loop:23}[type],
+  frequencyLevel:[35,45,55][i],
+  angle:type==='push'?0:180
+ });
+}
 function segments(name){
  if(name==='random-drive')return ['drive(f)','drive(b)'];
  if(name==='23-random-drive')return ['drive(f)','drive(b)','drive(f)'];
@@ -61,7 +106,7 @@ function segments(name){
 export function defaults(){
  return Object.entries(LAYOUT).flatMap(([category,names])=>names.map(name=>({
   id:name,name,category,
-  levels:[1,2,3].map(level=>segments(name).map(segment=>[shot(segment,level)])),
+  levels:[1,2,3].map(level=>segments(name).map(segment=>[shot(segment,category==='basic'?level:1)])),
   shuffle:name.includes('random'),factory:true
  })));
 }
@@ -96,12 +141,14 @@ export function loadDrills() {
         ...factory.map(d=>{
           const saved=byId.get(d.id);
           if(!saved)return d;
-          // Replace only factory levels matching the exact previous generator.
-          // Compare each difficulty separately to preserve partial user edits.
-          const oldLevels=[1,2,3].map(i=>segments(d.name).map(s=>[previousShot(s,i)]));
+          // Preserve any user-modified difficulty level. Only exact untouched
+          // legacy factory levels (v3 and v4) are eligible for replacement.
+          const unchanged=v=>[1,2,3].map(i=>segments(d.name).map(s=>[v(s,i)]));
+          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot)];
           const levels=d.levels.map((fresh,i)=>
-            JSON.stringify(saved.levels?.[i])===JSON.stringify(oldLevels[i])
-              ?fresh:clone(saved.levels[i]));
+            oldVersions.some(version=>
+              JSON.stringify(saved.levels?.[i])===JSON.stringify(version[i]))
+                ?fresh:clone(saved.levels[i]));
           return {...saved,name:d.name,category:d.category,factory:true,levels};
         }),
         ...stored.filter(d=>!ids.has(d.id)).map(d=>
