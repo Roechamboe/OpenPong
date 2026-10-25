@@ -10,7 +10,7 @@ function drill(name, steps, category='basic') {
 }
 // Derived from Nova's js/constants.js names and ordered sequences.
 // Dora speed/spin/arc values are approximate starting points, NOT RPM equivalents.
-export const FACTORY_PRESET_VERSION=10;
+export const FACTORY_PRESET_VERSION=11;
 const LEGACY_STARTER_IDS=new Set(['center-drive','left-drive','right-drive','backspin','topspin','left-right','center-left-right','alternating-spin','wide-placement']);
 const LAYOUT={
  basic:['push(b)','push(f)','drive(b)','drive(f)','loop(b)','loop(f)'],
@@ -77,12 +77,14 @@ function generateFundamentalShot(symbol,difficulty=1,pushSpeedOffset=-3){
 }
 // Hardware-tuned candidate baseline (Dir:Speed:Spin:Arc:Freq:SpinAngle).
 // Basic level 1 is exact; higher levels are provisional +3/+6 speed & spin,
-// and +10/+20 frequency. Drive stays byte-for-byte the v7 generator.
+// and +10/+20 frequency. v11 also sets Drive speed/spin/arc explicitly.
 export const TUNED_FUNDAMENTALS=Object.freeze({
  'push(f)':Object.freeze({direction:11,speed:28,spin:10,frequencyLevel:35,arc:15,angle:180}),
  'push(b)':Object.freeze({direction:71,speed:28,spin:10,frequencyLevel:35,arc:15,angle:180}),
  'loop(f)':Object.freeze({direction:5,speed:40,spin:20,frequencyLevel:35,arc:40,angle:0}),
- 'loop(b)':Object.freeze({direction:76,speed:40,spin:20,frequencyLevel:35,arc:40,angle:0})
+ 'loop(b)':Object.freeze({direction:76,speed:40,spin:20,frequencyLevel:35,arc:40,angle:0}),
+ 'drive(f)':Object.freeze({direction:16,speed:40,spin:4,arc:15,frequencyLevel:65,angle:0}),
+ 'drive(b)':Object.freeze({direction:66,speed:40,spin:4,arc:15,frequencyLevel:65,angle:0})
 });
 export function fundamentalShot(symbol,difficulty=1){
  if(!Number.isInteger(difficulty)||difficulty<1||difficulty>3)throw new RangeError('Invalid difficulty');
@@ -95,6 +97,11 @@ export function fundamentalShot(symbol,difficulty=1){
   frequencyLevel:tuned.frequencyLevel+10*offset
  });
 }
+// Snapshot of untouched v10 shots for selective migration.
+const v10Shot=(symbol,difficulty=1)=>{
+ if(symbol.startsWith('drive'))return generateFundamentalShot(symbol,difficulty,-3);
+ return fundamentalShot(symbol,difficulty);
+};
 // v9 shipped wrong Arc/Frequency only for backhand Push and Loop.
 // Preserve an exact snapshot to migrate only unchanged stored v9 levels.
 const v9Shot=(symbol,difficulty=1)=>{
@@ -231,7 +238,7 @@ export function loadDrills() {
           // Preserve any user-modified difficulty level. Only exact untouched
           // legacy factory levels (v3 and v4) are eligible for replacement.
           const unchanged=v=>[1,2,3].map(i=>segments(d.name).map(s=>[v(s,d.category==='basic'?i:1)]));
-          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot),unchanged(v5Shot),unchanged(v6Shot),unchanged(v7Shot),unchanged(v8Shot),unchanged(v9Shot)];
+          const oldVersions=[unchanged(previousShot),unchanged(legacyV4Shot),unchanged(v5Shot),unchanged(v6Shot),unchanged(v7Shot),unchanged(v8Shot),unchanged(v9Shot),unchanged(v10Shot)];
           const levels=d.levels.map((fresh,i)=>
             oldVersions.some(version=>
               JSON.stringify(saved.levels?.[i])===JSON.stringify(version[i]))
