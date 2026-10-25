@@ -16,9 +16,9 @@ This standalone fork keeps a **modular robot adapter API** so contributors can a
 
 **Hardware safety:** A prominent **■ STOP ROBOT** button is always displayed in the Connect / Reps / Time card. It cancels the current app session and requests the Dora stop sequence over BLE, even during drill setup. The status reports that a command was sent or failed, **not proof of a physical stop**. If Bluetooth is disconnected, stalled or the robot continues feeding, use the robot's **physical stop**. Always keep it accessible, especially while testing unfamiliar shot parameters.
 
-## Fundamental shot baseline (factory v10)
+## Fundamental shot baseline (factory v11)
 
-The factory drills use **six fundamental Dora-native shots**. Four are now based on your physically tuned settings; **Drive remains unchanged from v7** because it was reported to land comfortably on the table and feel appropriate, though somewhat challenging for Level 1.
+The factory drills use **six fundamental Dora-native shots**. Four Push/Loop vectors are based on your physically tuned settings. The two Drive vectors are now deliberately softened to Speed 40, Spin 4, Arc 15, while preserving the original directions, Frequency 65 and SpinAngle 0.
 
 The vector order is exactly **Dir:Speed:Spin:Arc:Freq:SpinAngle**. Arc is the fourth field and Frequency is the fifth.
 
@@ -26,18 +26,20 @@ The vector order is exactly **Dir:Speed:Spin:Arc:Freq:SpinAngle**. Arc is the fo
 | --- | --- | --- |
 | Forehand Push | `11:28:10:15:35:180` | Hardware-tuned baseline |
 | Backhand Push | `71:28:10:15:35:180` | Hardware-tuned baseline |
-| Forehand Drive | Existing v7 settings, unchanged | Provisional; physically acceptable |
-| Backhand Drive | Existing v7 settings, unchanged | Provisional; physically acceptable |
+| Forehand Drive | `16:40:4:15:65:0` | Softer Drive candidate, awaiting test |
+| Backhand Drive | `66:40:4:15:65:0` | Softer Drive candidate, awaiting test |
 | Forehand Loop | `5:40:20:40:35:0` | Hardware-tuned baseline |
 | Backhand Loop | `76:40:20:40:35:0` | Hardware-tuned baseline |
 
 Push spin angle 180 represents the tested backspin configuration; Loop spin angle 0 represents topspin. Direction is calibrated separately for forehand/backhand. These exact four parameter vectors are **not generated from the no-spin placement estimator**; the original five-point no-spin model remains available for independent placement work.
 
-The **Basic Level 1** Push and Loop vectors are reproduced exactly. Because only one tuned vector per stroke was supplied, **Basic Levels 2 and 3 are provisional progressions**: respectively +3/+6 Speed, +3/+6 Spin, and +10/+20 Frequency relative to Level 1, with Direction, Arc, and SpinAngle unchanged. Drives keep all their previous v7 difficulty settings. Combined and Complex factory drills use the Level 1 versions of their constituent shots at all difficulty settings, as before.
+The **Basic Level 1** Push and Loop vectors are reproduced exactly. Because only one tuned vector per stroke was supplied, **Basic Levels 2 and 3 are provisional progressions**: respectively +3/+6 Speed, +3/+6 Spin, and +10/+20 Frequency relative to Level 1, with Direction, Arc, and SpinAngle unchanged. Drives use the same provisional +3/+6 Speed, +3/+6 Spin, +10/+20 Frequency progression as Push/Loop, while retaining Direction, Arc and SpinAngle. Combined and Complex factory drills use the Level 1 versions of their constituent shots at all difficulty settings, as before.
 
-Factory preset **version 10** updates recognized *untouched* stored legacy factory levels while preserving user-edited levels and custom drills. This update does **not** purge historical migration code or older saved records; cleanup can happen after the complete baseline is validated and backed up. Calibration Engine measurements remain separate from the factory drill library and are not automatically applied to drills.
+Factory preset **version 11** updates recognized *untouched* stored legacy factory levels while preserving user-edited levels and custom drills. This update does **not** purge historical migration code or older saved records; cleanup can happen after the complete baseline is validated and backed up. Calibration Engine measurements remain separate from the factory drill library and are not automatically applied to drills.
 
 **Correction in v10:** Dora vectors always use **Dir:Speed:Spin:Arc:Freq:SpinAngle**. Four tuned presets are now internally stored as Arc 15 / Frequency 35 for both Push shots, and Arc 40 / Frequency 35 for both Loop shots. A v9 bug left both backhand shots reversed internally; v10 migrates untouched affected presets while preserving edited levels. The frequency range remains 20–170.
+
+**Drive adjustment in v11:** Both Level 1 Drive shots now use Speed 40 / Spin 4 / Arc 15, rather than the prior Speed 48 or 47 / Spin 10 / Arc 12. Direction 16 (FH), 66 (BH), Frequency 65 and SpinAngle 0 are unchanged. These changes also affect Drive steps within Combined and Complex factory drills. Untouched v10 factory levels are migrated; manually edited levels stay intact. The revised Drives require a new physical test.
 
 ### Validation status
 
