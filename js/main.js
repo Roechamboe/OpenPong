@@ -1,5 +1,3 @@
-import {initCalibrationEditor} from './calibration-ui.js?v=2';
-import {initPlacementEstimator} from './placement-estimator.js?v=5';
 import {setMode,resetStats} from './state.js';
 import {setTheme,toggleMenu,updateStatsUI} from './ui.js';
 import {connectDevice,disconnectDevice,bleState} from './bluetooth.js';
@@ -41,7 +39,7 @@ window.resetStats=()=>{
 document.addEventListener('DOMContentLoaded',()=>{
  const savedTheme=localStorage.getItem('openpong_theme')||localStorage.getItem('nova_theme_pref');
  if(savedTheme)setTheme(savedTheme);
- initDoraPanel();initPlacementEstimator();initCalibrationEditor();updateStatsUI();updateConnection();
+ initDoraPanel();updateStatsUI();updateConnection();
  document.getElementById('btn-connect').addEventListener('click',async()=>{
   const btn=document.getElementById('btn-connect');btn.disabled=true;
   try{if(bleState.isConnected)await disconnectDevice();else await connectDevice();}
