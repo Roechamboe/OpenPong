@@ -45,6 +45,10 @@ Factory preset **version 11** updates recognized *untouched* stored legacy facto
 
 Your tests found that the earlier Push had appropriate backspin but excessive pace; Drive was faster/flatter, Loop had more arc, less pace, stronger topspin, and both Drive and Loop landed comfortably. The four updated Push/Loop vectors are your selected tuned baselines. Live testing of their saved factory sequences and their Level 2/3 progressions is still needed. Keep the robot's physical stop accessible when verifying settings.
 
+## Testing unsaved Dora drills
+
+The **Edit Dora Drill** dialog offers **▶ Test** beside each ball variant and **Test drill** in its footer. The ball test uploads the selected variant only, requests one ball, and stops after one launch notification (with a 15-second safety timeout). **Test drill** uploads the current unsaved editor draft and uses the configured Reps or Time limit, including enabled steps, variants, scatter, and shuffle. Neither action saves editor changes or increments the regular training statistics. You must be connected to the Dora robot. The red **STOP ROBOT** button remains available; a successful Bluetooth stop write is not proof of a physical stop. The compact trash icon deletes the entire drill only after confirmation. Save is still required to persist edits.
+
 ## Dora functions
 
 - Native 15-byte BLE messages over service FFF0, with notifications on FFF1 and writes on FFF2.
@@ -56,12 +60,6 @@ Your tests found that the earlier Push had appropriate backspin but excessive pa
 - JSON drill import/export; data saved in browser local storage.
 
 **Not yet validated:** All drill presets, multi-ball operation, and volume/brightness commands require further physical testing. Pause/resume is not supported.
-
-## Experimental placement and calibration tools
-
-The Ball Placement Estimator and Calibration Engine are being developed separately on the [`feature/dora-placement-calibration`](https://github.com/Roechamboe/OpenPong/tree/feature/dora-placement-calibration) branch. They are intentionally omitted from this standalone robot controller.
-
-The six Level 1 factory shots remain explicitly defined in `js/robots/dora/drills.js`. Older factory preset migrations use fixed historical placement-anchor values; they do **not** need the experimental estimator. User-edited drills and the calibrated six-shot baseline remain supported.
 
 ## Extending the robot abstraction
 
