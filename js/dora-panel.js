@@ -173,20 +173,20 @@ async function startDrill(id,{testDraft=null,testBall=null}={}){
  try {
   // Repetitions are counted from launch notifications; unlike Nova these are
   // not per-sequence completion callbacks. Hardware may emit fewer during a stop.
-  const selected=compileDrill(drill,level,{shuffle:drill.shuffle});
+  const selected=testBall?[clone(testBall)]:compileDrill(drill,level,{shuffle:drill.shuffle});
   status(`Uploading ${selected.length} shots…`);
   await robot.prepareDrill(selected);
   if(runId!==token)return;
   await robot.startTraining();
+  if(runId!==token){await robot.stopTraining();return;}
   running=true;
-  appStats.drills+=1;
-  saveStats();
-  status(`Running: ${escapeHtml(drill.name)}`);
-  if(mode==='time')stopTimer=setTimeout(()=>{void stop();},duration*1000);
+  if(!isTest){appStats.drills+=1;saveStats();}
+  status(isTest?'Testing unsaved drill: '+drill.name:'Running: '+drill.name);
+  if(mode==='time'||testBall)stopTimer=setTimeout(()=>{void stop();},testBall?15000:duration*1000);
  } catch(err) {
   status('Start error: '+err.message);
   if(robot.isRunning())await stop();
- } finally{busy=false;}
+ } finally{busy=false;if(!running)testing=false;}
 }
 function download(text,name){
  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
