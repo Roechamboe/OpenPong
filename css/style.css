@@ -1163,3 +1163,8 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 #btn-emergency-stop:focus-visible{outline:3px solid #171717;outline-offset:3px}
 #btn-emergency-stop:active{background:#a81717}
 #emergency-stop-feedback{min-height:1.25em;margin:8px 1px 0;color:var(--danger);font-size:.8rem;font-weight:650}
+
+/* Compact destructive action beside Test Drill / Cancel / Save. */
+#dora-editor .modal-footer #dora-delete{flex:0 0 38px;width:38px;min-width:38px;padding:0;border-radius:9px}
+#dora-editor .modal-footer #dora-test-drill{flex:1.15 1 0;min-width:0}
+#dora-editor .modal-footer #dora-test-drill,#dora-editor .modal-footer #dora-cancel,#dora-editor .modal-footer #dora-save{font-size:.74rem;padding:11px 5px}
