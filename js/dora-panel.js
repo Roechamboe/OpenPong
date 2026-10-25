@@ -1,6 +1,5 @@
 // Dora drill UI uses the reusable OpenPong design and Dora-native values.
 // All data lives in the independent openpong_dora_drills_v1 store.
-import { parseBallVector } from './ball-vector.js?v=4';
 import { onRobotEvent, getActiveAdapter } from './core/robot-manager.js';
 import { appStats } from './state.js';
 import { updateStatsUI } from './ui.js';
@@ -13,7 +12,7 @@ let drills=loadDrills(), category='basic', level=1, editing=null, draft=null;
 let stopTimer=null, running=false, busy=false, token=0, launches=0, stopping=false;
 let holdTimer=null, holdStart=null, suppressRunClick=false;
 let gripDrag=null;
-let activeMode='time', activeTarget=0;
+let activeMode='time', activeTarget=0, testing=false;
 const $=id=>document.getElementById(id);
 const clone=x=>JSON.parse(JSON.stringify(x));
 function saveStats(){localStorage.setItem('openpong_stats',JSON.stringify(appStats));updateStatsUI();}
@@ -86,7 +85,7 @@ function editor({focusStep=null}={}){
       </div>`).join('')}
     </div>
     <div class="card-actions">
-     <button type="button" class="btn-action" data-action="paste-vector" data-step="${i}" data-opt="${j}" title="Paste Dir:Speed:Spin:Arc:Freq:SpinAngle">📋 Paste parameters</button>
+     <button type="button" class="btn-action" data-action="test-ball" data-step="${i}" data-opt="${j}" title="Test only this ball without saving">▶ Test</button>
      <button type="button" class="btn-action btn-act-clone" data-action="variant" data-step="${i}">+ Variant</button>
      <button type="button" class="btn-action btn-act-del" data-action="remove-option" data-step="${i}" data-opt="${j}" ${options.length===1?'disabled':''}>Delete</button>
     </div>
@@ -138,7 +137,7 @@ function modifyEditor(event){
  }
 }
 async function stop(){
- token++;clearTimeout(stopTimer);stopTimer=null;running=false;
+ token++;clearTimeout(stopTimer);stopTimer=null;running=false;testing=false;
  const feedback=$('emergency-stop-feedback');
  if(!robot.bleState.isConnected){
   if(feedback)feedback.textContent='Not connected — use physical robot stop.';
@@ -156,20 +155,21 @@ async function stop(){
   status('STOP FAILED: '+e.message);
  }finally{stopping=false;}
 }
-async function startDrill(id){
+async function startDrill(id,{testDraft=null,testBall=null}={}){
  if(busy||running)return;
  if(!robot.bleState.isConnected){status('Connect to Dora first');return;}
- const drill=drills.find(d=>d.id===id);if(!drill)return;
- const mode=runMode;
+ const drill=testDraft||drills.find(d=>d.id===id);if(!drill)return;
+ const isTest=!!testDraft;
+ const mode=testBall?'reps':runMode;
  const duration=Number($('input-time').value);
- const repetitions=Number($('input-reps').value);
+ const repetitions=testBall?1:Number($('input-reps').value);
  if ((mode==='time' && (!Number.isInteger(duration)||duration<1||duration>3600)) ||
      (mode==='reps' && (!Number.isInteger(repetitions)||repetitions<1||repetitions>10000))) {
   status('Invalid '+(mode==='time'?'duration':'ball count'));return;
  }
  activeMode=mode;
  activeTarget=mode==='time'?duration:repetitions;
- const runId=++token;busy=true;launches=0;
+ const runId=++token;busy=true;launches=0;testing=isTest;
  try {
   // Repetitions are counted from launch notifications; unlike Nova these are
   // not per-sequence completion callbacks. Hardware may emit fewer during a stop.
@@ -302,9 +302,10 @@ export function initDoraPanel(){
     <div id="dora-steps"></div>
    </div>
    <div class="modal-footer">
-    <button id="dora-save" class="btn-modal btn-save" type="button">Save</button>
+    <button id="dora-delete" class="btn-modal btn-delete-drill" type="button" title="Delete drill" aria-label="Delete drill"><svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19" fill="currentColor"><path d="M3 6h18v2H3V6zm2 3h14v13H5V9zm3-5h6v2H8V4zm9 5H7v11h10V9z"/></svg></button>
+    <button id="dora-test-drill" class="btn-modal btn-test-combo" type="button">Test drill</button>
     <button id="dora-cancel" class="btn-modal" type="button">Cancel</button>
-    <button id="dora-delete" class="btn-modal" type="button">Delete</button>
+    <button id="dora-save" class="btn-modal btn-save" type="button">Save</button>
    </div>
   </div>
  </section>
@@ -396,17 +397,12 @@ export function initDoraPanel(){
   const btn=e.target.closest('[data-action]');if(!btn)return;
   const i=Number(btn.dataset.step),j=Number(btn.dataset.opt),steps=draft.levels[level-1];
   let focusStep=null;
-  if(btn.dataset.action==='paste-vector'){
-   (async()=>{
-    try{
-     const text=await navigator.clipboard.readText();
-     const parsed=parseBallVector(text);
-     Object.assign(steps[i][j],parsed);
-     editor();
-     const group=$('dora-steps').querySelector('[data-step-index="'+i+'"]');
-     group?.querySelector('[data-action="paste-vector"][data-opt="'+j+'"]')?.focus({preventScroll:true});
-    }catch(error){alert('Cannot paste ball parameters: '+error.message);}
-   })();
+  if(btn.dataset.action==='test-ball'){
+   if(!draft||!steps[i]?.[j])return;
+   const ball=clone(steps[i][j]);
+   // Test this exact variant regardless of whether its step is currently disabled.
+   delete ball.inactive;delete ball.scatter;
+   void startDrill(editing,{testDraft:clone(draft),testBall:ball});
    return;
   }
   switch(btn.dataset.action){
@@ -419,6 +415,14 @@ export function initDoraPanel(){
    case 'remove-option':if(steps[i].length>1)steps[i].splice(j,1);break;
   }
   editor({focusStep});
+ };
+ $('dora-test-drill').onclick=()=>{
+  if(!draft)return;
+  const trial=clone(draft);
+  trial.name=$('dora-editor-name').value.trim().slice(0,40);
+  trial.shuffle=$('dora-editor-shuffle').checked;
+  if(!trial.name){alert('Enter a drill name before testing.');return;}
+  void startDrill(editing,{testDraft:trial});
  };
  $('dora-save').onclick=()=>{try{commitEditor();status('Drill saved');}catch(err){alert(err.message);}};
  $('dora-cancel').onclick=closeEditor;
@@ -437,7 +441,7 @@ export function initDoraPanel(){
  onRobotEvent(event=>{
   if(event.type==='ballLaunched'){
    launches++;
-   if(running){appStats.balls+=1;saveStats();}
+   if(running&&!testing){appStats.balls+=1;saveStats();}
    if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
