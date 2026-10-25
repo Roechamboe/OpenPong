@@ -1,4 +1,3 @@
-import {estimatePlacement,DEFAULT_PROFILE} from '../../calibration-engine.js?v=1';
 // Dora-native drill model. Never mix these values with Nova wheel-RPM arrays.
 const KEY = 'openpong_dora_drills_v1';
 export const CATEGORIES = Object.freeze(['basic','combined','complex','custom-a','custom-b','custom-c']);
@@ -41,14 +40,17 @@ const PUSH_REFERENCE_DIFF=Math.abs(1547-2915);
 // source presets; stroke-specific Dora arcs therefore remain an inference.
 const DORA_ARC={push:15,drive:12,loop:21};
 
-// Six fundamental shots: right-handed receiver forehand is X=9; backhand X=3.
-// All targets lie inside the measured no-spin hull. Profiles are starting hypotheses,
-// NOT physically tested spin corrections. Engine uses fixed seed calibration only:
-// personal calibration saves must not silently rewrite factory defaults.
-export const FUNDAMENTAL_TARGETS=Object.freeze({
- 'push(b)':{x:3,y:5}, 'push(f)':{x:9,y:5},
- 'drive(b)':{x:3,y:3},'drive(f)':{x:9,y:3},
- 'loop(b)':{x:3,y:7}, 'loop(f)':{x:9,y:7}
+// Historical v6-v10 placement anchors baked into the drill model so the
+// standalone controller does not depend on the experimental estimator.
+// These are the integer-rounded results of the original five-point profile.
+// Only used for identifying untouched older factory presets during migration.
+const LEGACY_PLACEMENT=Object.freeze({
+ 'push(b)':{direction:71,speed:38,arc:15},
+ 'push(f)':{direction:11,speed:39,arc:15},
+ 'drive(b)':{direction:66,speed:43,arc:15},
+ 'drive(f)':{direction:16,speed:44,arc:15},
+ 'loop(b)':{direction:76,speed:34,arc:20},
+ 'loop(f)':{direction:5,speed:33,arc:40}
 });
 const STROKE_ADJUSTMENT=Object.freeze({
  push:{speed:-3,arc:0,spin:10,angle:180},
@@ -59,19 +61,15 @@ function generateFundamentalShot(symbol,difficulty=1,pushSpeedOffset=-3){
  const match=/^(push|drive|loop)\((b|f)\)$/.exec(symbol);
  if(!match)throw new Error('Unknown factory shot '+symbol);
  if(!Number.isInteger(difficulty)||difficulty<1||difficulty>3)throw new RangeError('Invalid difficulty');
- const target=FUNDAMENTAL_TARGETS[symbol],base=estimatePlacement(target.x,target.y,DEFAULT_PROFILE);
- if(!base.valid)throw new Error('Factory target outside measured calibration hull: '+symbol);
- const type=match[1],adj=STROKE_ADJUSTMENT[type];
- // Level two/three are provisional training progressions, not calibration layers.
- const difficultySpeed=[0,3,6][difficulty-1];
- const difficultySpin=[0,3,6][difficulty-1];
+ const base=LEGACY_PLACEMENT[symbol],type=match[1],adj=STROKE_ADJUSTMENT[type];
+ const offset=difficulty-1;
  const frequencies={push:[35,45,55],drive:[65,75,95],loop:[35,45,55]};
  return ball({
-  direction:Math.max(0,Math.min(90,Math.round(base.direction))),
-  speed:Math.max(20,Math.min(100,Math.round(base.speed+adj.speed+difficultySpeed+(type==='push'?pushSpeedOffset+3:0)))),
-  spin:Math.min(60,adj.spin+difficultySpin),
-  arc:Math.max(-65,Math.min(65,Math.round(base.arc+adj.arc))),
-  frequencyLevel:frequencies[type][difficulty-1],
+  direction:base.direction,
+  speed:Math.max(20,Math.min(100,base.speed+adj.speed+3*offset+(type==='push'?pushSpeedOffset+3:0))),
+  spin:Math.min(60,adj.spin+3*offset),
+  arc:Math.max(-65,Math.min(65,base.arc+adj.arc)),
+  frequencyLevel:frequencies[type][offset],
   angle:adj.angle
  });
 }
