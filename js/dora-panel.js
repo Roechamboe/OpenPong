@@ -19,7 +19,7 @@ function saveStats(){localStorage.setItem('openpong_stats',JSON.stringify(appSta
 // Keep drill display capitalization independent from saved IDs and names.
 const displayDrillName=name=>name.startsWith('cust_')?name:name.replace(/-/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase());
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function status(s){$('dora-status').textContent=s;}
+function status(s){$('dora-status').textContent=s;const el=$('dora-editor-test-status');if(el)el.textContent=s;}
 function setting(id,label,min,max,step=1){
  return `<label class="editor-field" style="min-width:0;display:flex;flex-direction:column;gap:4px"><span>${label}</span><input type="number" data-field="${id}" min="${min}" max="${max}" step="${step}" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px"></label>`;
 }
@@ -301,6 +301,7 @@ export function initDoraPanel(){
     <p class="dora-editor-tip">Variants are selected randomly per shot. Scatter is applied to direction.</p>
     <div id="dora-steps"></div>
    </div>
+   <p id="dora-editor-test-status" role="status" aria-live="polite" style="margin:5px 12px;font-size:.75rem;color:var(--text-light)"></p>
    <div class="modal-footer">
     <button id="dora-delete" class="btn-modal btn-delete-drill" type="button" title="Delete drill" aria-label="Delete drill"><svg viewBox="0 0 24 24" aria-hidden="true" width="19" height="19" fill="currentColor"><path d="M3 6h18v2H3V6zm2 3h14v13H5V9zm3-5h6v2H8V4zm9 5H7v11h10V9z"/></svg></button>
     <button id="dora-test-drill" class="btn-modal btn-test-combo" type="button">Test drill</button>
@@ -445,7 +446,7 @@ export function initDoraPanel(){
    if(running&&activeMode==='reps'&&launches>=activeTarget)void stop();
   }
   if(event.type==='ready')status('Connected — select a drill');
-  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;const feedback=$('emergency-stop-feedback');if(feedback)feedback.textContent='Connection lost — use physical stop if robot continues.';status('Disconnected — verify robot has stopped');}
+  if(event.type==='disconnected'){token++;clearTimeout(stopTimer);stopTimer=null;running=false;testing=false;const feedback=$('emergency-stop-feedback');if(feedback)feedback.textContent='Connection lost — use physical stop if robot continues.';status('Disconnected — verify robot has stopped');}
  });
  renderCards();refresh();
 }
