@@ -6,7 +6,6 @@
  <meta name="theme-color" content="#202b34">
  <title>Dora Drill Control · OpenPong</title>
  <link rel="stylesheet" href="css/style.css?v=dora-emergency-stop-v1">
- <link rel="stylesheet" href="css/placement-estimator.css?v=3">
 </head>
 <body>
  <div class="container">
@@ -18,8 +17,6 @@
    <div class="menu-title">Drill</div>
    <div id="dora-export" class="theme-item" role="button" tabindex="0"><span class="color-preview" style="background:var(--text)"></span> Export Drills</div>
    <div id="dora-import" class="theme-item" role="button" tabindex="0"><span class="color-preview" style="background:var(--text)"></span> Import Drills</div>
-   <div class="theme-item" role="button" tabindex="0" onclick="openCalibrationEngine()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCalibrationEngine()}">📐 Calibration Engine</div>
-   <div class="theme-item" role="button" tabindex="0" onclick="openPlacementEstimator()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPlacementEstimator()}">🎯 Ball Placement Estimator</div>
    <div id="dora-open-settings" class="theme-item" role="button" tabindex="0" onclick="openDoraSettings()">⚙ Device Settings</div>
    <div style="border-top:1px solid var(--border);margin:8px 0"></div>
    <div class="menu-title">Theme</div>
@@ -31,43 +28,6 @@
    <div class="theme-item" onclick="resetStats()">Reset Statistics</div>
   </div>
   <input id="dora-import-file" type="file" accept=".json" hidden>
-  <section id="calibration-page" hidden role="dialog" aria-modal="true" aria-labelledby="calibration-title">
-   <div class="settings-card placement-panel">
-    <button id="calibration-close" class="placement-close" type="button" onclick="closeCalibrationEngine()" aria-label="Close calibration engine">×</button>
-    <h2 id="calibration-title">Calibration Engine</h2>
-    <p>No Spin · Difficulty 1. Receiver view: X=0 at leftmost end-line corner; Y increases toward net.</p>
-    <p><strong>Robot location:</strong> Center line (X=6), opponent's end line (Y=22 on the two-half-table coordinate). Fixed assumption for this profile; moving the robot requires recalibration.</p>
-    <p id="calibration-count"></p>
-    <p>Tap a numbered point to edit it, or tap another grid intersection to add a target.</p>
-    <div id="calibration-map"></div>
-    <h3 id="calibration-selected"></h3>
-    <div id="calibration-fields" class="calibration-fields"></div>
-    <button id="calibration-delete" type="button">Delete selected point</button>
-    <div class="calibration-buttons">
-     <button id="calibration-add" type="button">+ Add target</button>
-     <button id="calibration-save" type="button">Save calibration</button>
-     <button id="calibration-reset" type="button">Reset five points</button>
-    </div>
-    <p id="calibration-status" role="status" aria-live="polite">Edit measured values, then save. New rows start with placeholders.</p>
-   </div>
-  </section>
-  <section id="placement-estimator-page" hidden role="dialog" aria-modal="true" aria-labelledby="placement-title">
-   <div class="settings-card placement-panel">
-    <button id="placement-close" class="placement-close" type="button" onclick="closePlacementEstimator()" aria-label="Close estimator">×</button>
-    <h2 id="placement-title">Ball Placement Estimator</h2>
-    <p>No Spin · Difficulty 1 · Grid X 0–12, Y 0–11. Origin at receiver's leftmost end-line corner (receiver's viewpoint). Reference only; no robot commands.</p>
-    <div id="placement-map-container"></div>
-    <label class="placement-control" for="placement-x">Across X: <strong id="placement-x-label">6</strong><input id="placement-x" type="range" min="0" max="12" step="1" value="6"></label>
-    <label class="placement-control" for="placement-y">Depth Y: <strong id="placement-y-label">5</strong><input id="placement-y" type="range" min="0" max="11" step="1" value="5"></label>
-    <div id="placement-output" class="placement-values" aria-live="polite">
-     <div><small>Direction</small><strong id="placement-direction">—</strong></div>
-     <div><small>Speed</small><strong id="placement-speed">—</strong></div>
-     <div><small>Arc</small><strong id="placement-arc">—</strong></div>
-    </div>
-    <p id="placement-status" role="status"></p>
-    <button id="placement-copy" type="button">Copy proposed settings</button>
-   </div>
-  </section>
   <section id="dora-settings-page" hidden role="dialog" aria-modal="true" aria-labelledby="dora-settings-title">
    <div id="dora-device-settings-card" class="settings-card" style="width:100%;max-width:440px;margin:30px auto">
     <button type="button" class="dora-settings-close" onclick="closeDoraSettings()" aria-label="Close device settings" title="Close device settings">×</button>
